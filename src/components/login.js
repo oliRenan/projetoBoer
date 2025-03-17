@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Image  } from "react-native";
-import { Card, Text, TextInput } from "react-native-paper";
+import { View, StyleSheet, Image , TouchableOpacity } from "react-native";
+import { Card, Text, TextInput  } from "react-native-paper";
 
 export default function Login({}) {
 
     const [email, setEmail] = useState("");
+    const [type, setType] = useState("");
 
     const [password, setPassword] = useState("");
 
@@ -12,7 +13,7 @@ export default function Login({}) {
 
     return (
         <View style={styles.container}>
-            <Image style={styles.logo} source={require("../../assets/tf.png")} />
+            <Image style={styles.logo} source={require("../../assets/logo.png")} />
             <Card>
                 <Card.Title title="LOGAR AO APLICATIVO" />
                 <Card.Content>
@@ -47,6 +48,28 @@ export default function Login({}) {
                         onChangeText={(text) => setPassword(text)}
 
                     />
+                    
+                    <TouchableOpacity
+                        style={[
+                            styles.handleLogin,
+                            { backgroundColor: type === "login" ? "#3ea6f2" : "black" },
+                        ]}
+//                        onPress={handleLogin}
+                    >
+                        <Text style={styles.loginText}>
+                            {type === "login" ? "Acessar" : "Cadastrar"}
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={() =>
+                            setType((type) => (type === "login" ? "cadastrar" : "login"))
+                        }
+                    >
+                        <Text style={{ textAlign: "center", fontSize: 20, fontWeight: "bold" }}>
+                            {type === "login" ? "Criar uma conta?" : "Já possuo uma conta!"}
+                        </Text>
+                    </TouchableOpacity>
                 </Card.Content>
             </Card>
         </View>
@@ -95,6 +118,12 @@ const styles = StyleSheet.create({
 
     }, 
 
+    handleLogin: {
+        alignItems: "center",
+        justifyContent: "center",
+        height: 45,
+        marginTop: 30,
+    },
 });
 
 
