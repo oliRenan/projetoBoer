@@ -1,8 +1,10 @@
 //declaração de componentes a serem utilizados
 import React, { useState } from "react";
 import { View, StyleSheet, Image, TouchableOpacity} from "react-native";
-import { Card, Text, TextInput } from "react-native-paper";
+import { Card, Text, TextInput , Dialog, Portal, Button} from "react-native-paper";
 import firebase from '../services/connectionFirebase';
+import { ToastContainer, toast } from 'react-toastify';
+
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 
 export default function Login({changeStatus}) {
@@ -10,37 +12,102 @@ export default function Login({changeStatus}) {
     const [password, setPassword] = useState("");
     //tipo recebe padrão logado
     const [type, setType] = useState('login');
- 
-    //verificar se é para logar ou cadastrar
-    function handleLogin(){
-        if(type === 'login'){
-          // Aqui fazemos o login
-          const user = firebase.auth().signInWithEmailAndPassword(email, password)
-          .then((user) => {
-            changeStatus(user.user.uid)
-          })
-          .catch((err)=>{
-            console.log(err);
-            alert('E-mail ou senha não cadastrados!');
-            return;
-          })    
-        }else{
-         // Aqui cadastramos o usuario
-         const user = firebase.auth().createUserWithEmailAndPassword(email, password)
-         .then((user)=>{
-           changeStatus(user.user.uid)
-         })
-         .catch((err)=>{
-          console.log(err);
-            alert('Erro ao Cadastrar!');
-          return;
-         })
-        }
-      }    
+    const notify= (message) => {
+        toast.warn(message, {
+            position: 'bottom-right',
+        });
+  };   
+    
+    // function handleLogin(){
+    //     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    //     const passwordRegex = /^.{6,}$/; 
+
+    //     if(!emailRegex.test(email)){
+    //         return notify('Email invalido');
+    //     }
+       
+    //     if(!passwordRegex.test(email)){
+    //         console.log("aaaaaaaaa")
+    //         return notify('Minimo de 6 caracteres');
+    //     }
+           
+    //     if(type === 'login'){
+    //       // Aqui fazemos o login
+    //       const user = firebase.auth().signInWithEmailAndPassword(email, password)
+    //       .then((user) => {
+    //         changeStatus(user.user.uid)
+    //       })
+    //       .catch((err)=>{
+    //         console.log(err);
+    //         alert('E-mail ou senha não cadastrados!');
+    //         return;
+    //       })    
+    //     }else{
+    //      // Aqui cadastramos o usuario
+    //      const user = firebase.auth().createUserWithEmailAndPassword(email, password)
+    //      .then((user)=>{
+    //        changeStatus(user.user.uid)
+    //      })
+    //      .catch((err)=>{
+    //       console.log(err);
+    //         alert('Erro ao Cadastrar!');
+    //       return;
+    //      })
+    //     }
+    //   }    
    
+
+    function handleLogin() {
+        // Regex para email válido
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        // Regex para senha com no mínimo 6 caracteres
+        const passwordRegex = /^.{6,}$/; 
+    
+        // Verifica se os campos estão vazios
+        if (!email) {
+            return notify('O campo de e-mail não pode estar vazio');
+        }
+        if (!password) {
+            return notify('O campo de senha não pode estar vazio');
+        }
+    
+        // Valida o formato do email
+        if (!emailRegex.test(email)) {
+            return notify('Email inválido');
+        }
+    
+        // Valida o comprimento da senha
+        if (!passwordRegex.test(password)) {
+            return notify('A senha deve ter no mínimo 6 caracteres');
+        }
+    
+        if (type === 'login') {
+            // Aqui fazemos o login
+            firebase.auth().signInWithEmailAndPassword(email, password)
+                .then((user) => {
+                    changeStatus(user.user.uid);
+                })
+                .catch((err) => {
+                    console.log(err);
+                    alert('E-mail ou senha não cadastrados!');
+                    return;
+                });
+        } else {
+            // Aqui cadastramos o usuário
+            firebase.auth().createUserWithEmailAndPassword(email, password)
+                .then((user) => {
+                    changeStatus(user.user.uid);
+                })
+                .catch((err) => {
+                    console.log(err);
+                    alert('Erro ao Cadastrar!');
+                    return;
+                });
+        }
+    }
     return (
         <View style={styles.container}>
-            <Image style={styles.logo} source={require("../../assets/logo.png")} />
+                    <Image style={styles.logo} source={require("../../assets/logo.png")} />
             <Card>
                 <Card.Title title="LOGAR AO APLICATIVO" />
                 <Card.Content>
@@ -85,6 +152,8 @@ export default function Login({changeStatus}) {
                     {type === "login" ? "Criar uma conta?" : "Já possuo uma conta!"}
                 </Text>
             </TouchableOpacity>
+                  <ToastContainer autoClose={1500}/>
+
         </View>
     );
 }

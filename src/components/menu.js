@@ -79,12 +79,10 @@ export default function Menu() {
                         }
                         return <Icon name={iconName} size={size} color={color} />;
                     },
-                })}
-                tabBarOptions={{
-                    activeTintColor: '#22f059',
-                    inactiveTintColor: '#777',
+                    tabBarActiveTintColor :'#22f059',
+                    tabBarIncactiveTintColor:'#777',
                     showLabel: true,
-                }}
+                })}
             >
                 <Tab.Screen name="Home" component={HomeScreen} />
                 <Tab.Screen name="Listar" component={ListScreen} />
