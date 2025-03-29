@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Image, TouchableOpacity} from "react-native";
+import { View, StyleSheet, Image, TouchableOpacity,ActivityIndicator } from "react-native";
 import { Card, Text, TextInput , Dialog, Portal, Button} from "react-native-paper";
 import firebase from '../services/connectionFirebase';
 import { ToastContainer, toast } from 'react-toastify';
@@ -8,52 +8,35 @@ import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 export default function Login({changeStatus}) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    //tipo recebe padrão logado
+    const [loading, setLoading] = useState(false);
     const [type, setType] = useState('login');
     const notify= (message) => {
         toast.warn(message, {
             position: 'bottom-right',
         });
   };   
-    
-    // function handleLogin(){
-    //     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    //     const passwordRegex = /^.{6,}$/; 
 
-    //     if(!emailRegex.test(email)){
-    //         return notify('Email invalido');
-    //     }
-       
-    //     if(!passwordRegex.test(email)){
-    //         console.log("aaaaaaaaa")
-    //         return notify('Minimo de 6 caracteres');
-    //     }
-           
-    //     if(type === 'login'){
-    //       // Aqui fazemos o login
-    //       const user = firebase.auth().signInWithEmailAndPassword(email, password)
-    //       .then((user) => {
-    //         changeStatus(user.user.uid)
-    //       })
-    //       .catch((err)=>{
-    //         console.log(err);
-    //         alert('E-mail ou senha não cadastrados!');
-    //         return;
-    //       })    
-    //     }else{
-    //      // Aqui cadastramos o usuario
-    //      const user = firebase.auth().createUserWithEmailAndPassword(email, password)
-    //      .then((user)=>{
-    //        changeStatus(user.user.uid)
-    //      })
-    //      .catch((err)=>{
-    //       console.log(err);
-    //         alert('Erro ao Cadastrar!');
-    //       return;
-    //      })
-    //     }
-    //   }    
-   
+    function authenticateUser(email, password, type) {
+        return new Promise((resolve, reject) => {
+            if (type === 'login') {
+                firebase.auth().signInWithEmailAndPassword(email, password)
+                    .then((user) => {
+                        resolve(user);
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    });
+            } else {
+                firebase.auth().createUserWithEmailAndPassword(email, password)
+                    .then((user) => {
+                        resolve(user);
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    });
+            }
+        });
+    }
 
     function handleLogin() {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -86,32 +69,24 @@ export default function Login({changeStatus}) {
          *
          *
          * */
-        for (const { regex, message } of  passwordConditions){
+        for (const { regex, message } of  passwordConditions ){
             if (!regex.test(password)) {
                 return notify(message);
             }
-    }
-        if (type === 'login') {
-            firebase.auth().signInWithEmailAndPassword(email, password)
-                .then((user) => {
-                    changeStatus(user.user.uid);
-                })
-                .catch((err) => {
-                    console.log(err);
-                    alert('E-mail ou senha não cadastrados!');
-                    return;
-                });
-        } else {
-            firebase.auth().createUserWithEmailAndPassword(email, password)
-                .then((user) => {
-                    changeStatus(user.user.uid);
-                })
-                .catch((err) => {
-                    console.log(err);
-                    alert('Erro ao Cadastrar!');
-                    return;
-                });
         }
+
+        setLoading(true);
+        authenticateUser(email,password,type)
+            .then((user)=>{
+                changeStatus(user.user.uid);
+            })
+            .catch((err)=>{
+                console.log(err);
+                alert(type === 'login' ? 'E-mail ou senha não cadastrados!' : 'Erro ao Cadastrar!');
+            })
+            .finally(()=>{
+                setLoading(false);
+            });
     }
     return (
         <View style={styles.container}>
@@ -145,12 +120,14 @@ export default function Login({changeStatus}) {
                     { borderColor: type === "login" ? " #6dbeed" : "black" },
                 ]}
                 onPress={handleLogin}
+                disabled={loading}
             >
                 <Text style={styles.loginText}>
                     {type === "login" ? "Acessar" : "Cadastrar"}
                 </Text>
             </TouchableOpacity>
  
+{loading && <ActivityIndicator size="large" color="#0000ff" style={{ marginTop: 20 }} />}
             <TouchableOpacity
                 onPress={() =>
                     setType((type) => (type === "login" ? "cadastrar" : "login"))

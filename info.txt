@@ -1,0 +1,21 @@
+if (type === 'login') {
+            firebase.auth().signInWithEmailAndPassword(email, password)
+                .then((user) => {
+                    changeStatus(user.user.uid);
+                })
+                .catch((err) => {
+                    console.log(err);
+                    alert('E-mail ou senha não cadastrados!');
+                    return;
+                });
+        } else {
+            firebase.auth().createUserWithEmailAndPassword(email, password)
+                .then((user) => {
+                    changeStatus(user.user.uid);
+                })
+                .catch((err) => {
+                    console.log(err);
+                    alert('Erro ao Cadastrar!');
+                    return;
+                });
+        }
