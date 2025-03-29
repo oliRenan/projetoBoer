@@ -1,10 +1,8 @@
-//declaração de componentes a serem utilizados
 import React, { useState } from "react";
 import { View, StyleSheet, Image, TouchableOpacity} from "react-native";
 import { Card, Text, TextInput , Dialog, Portal, Button} from "react-native-paper";
 import firebase from '../services/connectionFirebase';
 import { ToastContainer, toast } from 'react-toastify';
-
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 
 export default function Login({changeStatus}) {
@@ -58,12 +56,17 @@ export default function Login({changeStatus}) {
    
 
     function handleLogin() {
-        // Regex para email válido
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        // Regex para senha com no mínimo 6 caracteres
-        const passwordRegex = /^.{6,}$/; 
-    
-        // Verifica se os campos estão vazios
+//        const passwordRegex = /^.{6,}$/; 
+        const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{6,}$/;
+        
+        const passwordConditions = [
+            { regex: /^.{6,}$/, message: 'A senha deve ter no mínimo 6 caracteres' },
+            { regex: /[a-zA-Z]/, message: 'A senha deve conter pelo menos uma letra' },
+            { regex: /\d/, message: 'A senha deve conter pelo menos um número' },
+            { regex: /[!@#$%^&*(),.?":{}|<>]/, message: 'A senha deve conter pelo menos um símbolo' },
+        ];
+
         if (!email) {
             return notify('O campo de e-mail não pode estar vazio');
         }
@@ -71,18 +74,24 @@ export default function Login({changeStatus}) {
             return notify('O campo de senha não pode estar vazio');
         }
     
-        // Valida o formato do email
         if (!emailRegex.test(email)) {
             return notify('Email inválido');
         }
-    
-        // Valida o comprimento da senha
+
+        /*
+         *
         if (!passwordRegex.test(password)) {
             return notify('A senha deve ter no mínimo 6 caracteres');
         }
-    
+         *
+         *
+         * */
+        for (const { regex, message } of  pjsswordConditions ){
+            if (!regex.test(password)) {
+                return notify(message);
+            }
+    }
         if (type === 'login') {
-            // Aqui fazemos o login
             firebase.auth().signInWithEmailAndPassword(email, password)
                 .then((user) => {
                     changeStatus(user.user.uid);
@@ -93,7 +102,6 @@ export default function Login({changeStatus}) {
                     return;
                 });
         } else {
-            // Aqui cadastramos o usuário
             firebase.auth().createUserWithEmailAndPassword(email, password)
                 .then((user) => {
                     changeStatus(user.user.uid);

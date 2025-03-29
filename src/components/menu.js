@@ -3,8 +3,7 @@ import { Text, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import Tela from './tela';
- 
+import Tela from './tela.js' ;
 function HomeScreen() {
     return (
         <Tela></Tela>
