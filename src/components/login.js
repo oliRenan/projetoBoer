@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { View, StyleSheet, Image, TouchableOpacity,ActivityIndicator } from "react-native";
 import { Card, Text, TextInput , Dialog, Portal, Button} from "react-native-paper";
-import firebase from '../services/connectionFirebase';
+//import firebase from '../services/connectionFirebase';
 import { ToastContainer, toast } from 'react-toastify';
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { authenticateUser } from '../services/authService.js';
 
 export default function Login({changeStatus}) {
     const [email, setEmail] = useState("");
@@ -16,30 +17,7 @@ export default function Login({changeStatus}) {
         });
   };   
 
-    function authenticateUser(email, password, type) {
-        return new Promise((resolve, reject) => {
-            if (type === 'login') {
-                firebase.auth().signInWithEmailAndPassword(email, password)
-                    .then((user) => {
-                        console.log('Usuário autenticado na promisse:', user);
-                        resolve(user);
-                    })
-                    .catch((err) => {
-                        reject(err);
-                    });
-            } else {
-                firebase.auth().createUserWithEmailAndPassword(email, password)
-                    .then((user) => {
-                        resolve(user);
-                    })
-                    .catch((err) => {
-                        reject(err);
-                    });
-            }
-        });
-    }
-
-    function handleLogin() {
+     function handleLogin() {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 //        const passwordRegex = /^.{6,}$/; 
         const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{6,}$/;
@@ -62,21 +40,12 @@ export default function Login({changeStatus}) {
             return notify('Email inválido');
         }
 
-        /*
-         *
-        if (!passwordRegex.test(password)) {
-            return notify('A senha deve ter no mínimo 6 caracteres');
-        }
-         *
-         *
-         * */
-        for (const { regex, message } of  passwordConditions ){
+       for (const { regex, message } of  passwordConditions ){
             if (!regex.test(password)) {
                 return notify(message);
             }
         }
 
-        setLoading(true);
 
         toast.promise(
         authenticateUser(email, password, type),
