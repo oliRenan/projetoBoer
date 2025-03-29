@@ -78,9 +78,9 @@ export default function Login({changeStatus}) {
     return (
         <View style={styles.container}>
                     <Image style={styles.logo} source={require("../../assets/logo.png")} />
-            <Card>
+            <Card style={styles.card}>
                 <Card.Title title="LOGAR AO APLICATIVO" />
-                <Card.Content>
+                <Card.Content >
                     <Text variant="titleMedium"></Text>
                     <TextInput
                         style={styles.label}
@@ -161,5 +161,8 @@ const styles = StyleSheet.create({
         width: 150,
         borderWidth: 2, // Define a largura da borda
         borderRadius : 5,
+    },
+    card:{
+        backgroundColor : "#b8d7e9", 
     },
 });
