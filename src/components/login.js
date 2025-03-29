@@ -21,6 +21,7 @@ export default function Login({changeStatus}) {
             if (type === 'login') {
                 firebase.auth().signInWithEmailAndPassword(email, password)
                     .then((user) => {
+                        console.log('Usuário autenticado na promisse:', user);
                         resolve(user);
                     })
                     .catch((err) => {
@@ -76,17 +77,34 @@ export default function Login({changeStatus}) {
         }
 
         setLoading(true);
-        authenticateUser(email,password,type)
-            .then((user)=>{
-                changeStatus(user.user.uid);
-            })
-            .catch((err)=>{
-                console.log(err);
-                alert(type === 'login' ? 'E-mail ou senha não cadastrados!' : 'Erro ao Cadastrar!');
-            })
-            .finally(()=>{
-                setLoading(false);
-            });
+
+        toast.promise(
+        authenticateUser(email, password, type),
+        {
+            pending: {
+                render() {
+                    return "Autenticando...";
+                },
+            },
+            success: {
+                render({ data }) {
+                    console.log('Usuário autenticado:', data); // Verifique se isso aparece
+                    changeStatus(data.user.uid); // Chame a função de mudança de status
+                    return type === 'login' ? 'Login bem-sucedido!' : 'Cadastrado com sucesso';
+                },
+                    autoClose: 3000,
+            },
+            error: {
+                render({ data }) {
+                    console.log('Erro:', data); // Verifique se há algum erro
+                    return type === 'login' ? 'E-mail ou senha não cadastrados!' : 'Erro ao Cadastrar!';
+                }
+            }
+        }
+    ).finally(() => {
+        setLoading(false);
+    });
+  
     }
     return (
         <View style={styles.container}>
