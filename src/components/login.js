@@ -86,7 +86,7 @@ export default function Login({changeStatus}) {
          *
          *
          * */
-        for (const { regex, message } of  pjsswordConditions ){
+        for (const { regex, message } of  passwordConditions){
             if (!regex.test(password)) {
                 return notify(message);
             }
