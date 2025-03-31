@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Tela from './tela.js' ;
+import Jogos from './screen/jogos.js'
 function HomeScreen() {
     return (
         <Tela></Tela>
@@ -33,9 +34,7 @@ function PostScreen() {
  
 function PostScreen2() {
     return (
-        <View style={styles.container}>
-            <Text></Text>
-        </View>
+    <Jogos></Jogos>
     );
 }
  
@@ -63,8 +62,8 @@ export default function Menu() {
                             case 'Listar':
                                 iconName = 'bars'; //**/clipboard-list */
                                 break;
-                            case 'Fornecedor':
-                                iconName = 'truck';
+                            case 'Jogos':
+                                iconName = 'gamepad';
                                 break;
                             case 'Produtos':
                                 iconName = 'flask';
@@ -83,10 +82,16 @@ export default function Menu() {
                     showLabel: true,
                 })}
             >
-                <Tab.Screen name="Home" component={HomeScreen} />
-                <Tab.Screen name="Listar" component={ListScreen} />
+                <Tab.Screen 
+                    name="Home" 
+                    component={HomeScreen} 
+                />
+                <Tab.Screen 
+                    name="Listar" 
+                    component={ListScreen} 
+                />
                 <Tab.Screen
-                    name="Fornecedor"
+                    name="Jogos"
                     component={PostScreen2}
                 />
                 <Tab.Screen

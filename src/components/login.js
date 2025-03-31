@@ -14,7 +14,7 @@ export default function Login({changeStatus}) {
     const notify= (message) => {
         toast.warn(message, {
             position: 'bottom-right',
-        });
+    });
   };   
 
      function handleLogin() {
