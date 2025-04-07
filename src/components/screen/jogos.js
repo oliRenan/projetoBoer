@@ -1,6 +1,6 @@
- import { Text } from "react-native-web";
+import { Text } from "react-native-web";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
-import { TextInput , IconButton} from 'react-native-paper';
+import { TextInput, IconButton } from 'react-native-paper';
 import { useState } from "react";
 
 export default function Jogos() {
@@ -11,6 +11,8 @@ export default function Jogos() {
     const [tags, setTags] = useState([]);
     const [novaTag, setNovaTag] = useState('');
     const [error, setError] = useState('');
+    const [fieldError, setFieldError] = useState('');
+    const [tagError, setTagError] = useState(''); 
 
     const handleAddTag = () => {
         if (!novaTag.trim()) {
@@ -25,14 +27,26 @@ export default function Jogos() {
 
         setTags([...tags, novaTag]);
         setNovaTag('');
-        setError(''); 
+        setError('');
     };
-
     const handleRemoveTag = (tag) => {
         setTags(tags.filter(t => t !== tag));
     };
 
     const handleSubmit = () => {
+        if (!nomeJogo.trim() || !estudio.trim() || !plataforma.trim() || !campoExtra.trim()) {
+            setFieldError('Todos os campos são obrigatórios.');
+            return;
+        }
+
+        if (tags.length === 0) {
+            setTagError('Você precisa adicionar pelo menos uma tag.');
+            return;
+        }
+
+        setFieldError(''); 
+        setTagError('');  
+
         console.log({
             nomeJogo,
             estudio,
@@ -40,6 +54,12 @@ export default function Jogos() {
             campoExtra,
             tags
         });
+
+        setNomeJogo('')
+        setEstudio('')
+        setPlataforma('')
+        setCampoExtra('')
+        setTags([])
     };
 
     return (
@@ -75,7 +95,7 @@ export default function Jogos() {
             <TextInput
                 style={styles.inputs}
                 label='Geração'
-                right={<TextInput.Icon icon="eye" />}
+                right={<TextInput.Icon icon="recycle" />}
                 mode="outlined"
                 value={campoExtra}
                 onChangeText={setCampoExtra}
@@ -90,7 +110,7 @@ export default function Jogos() {
                     mode="outlined"
                     value={novaTag}
                     onChangeText={setNovaTag}
-                    onSubmitEditing={handleAddTag} 
+                    onSubmitEditing={handleAddTag}
                     activeOutlineColor="#22f059"
                 />
                  <IconButton
@@ -103,6 +123,8 @@ export default function Jogos() {
             </View>
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            {fieldError ? <Text style={styles.errorText}>{fieldError}</Text> : null}
+            {tagError ? <Text style={styles.errorText}>{tagError}</Text> : null}
 
             <View style={styles.tagsContainer}>
                 {tags.map((tag, index) => (
@@ -139,7 +161,6 @@ const styles = StyleSheet.create({
     inputContainer: {
          flexDirection: 'row',
          alignItems: 'center',
-         //marginTop: 12,
          justifyContent: "center",
          alignItems: "baseline",
          gap: 12,
@@ -154,8 +175,7 @@ const styles = StyleSheet.create({
         width: 50,
         justifyContent: 'center',
         paddingHorizontal: 10,
-        //marginLeft: 10,
-         alignItems:"center",
+        alignItems: "center",
     },
     loginText: {
         color: "#FFF",
@@ -184,7 +204,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     errorText: {
-         textAlign:"center",
+        textAlign: "center",
         color: 'red',
         marginTop: 10,
         fontSize: 14,
@@ -200,7 +220,7 @@ const styles = StyleSheet.create({
         borderRadius : 5,
         height: 50,
         width:200,
-        border:'none',
         backgroundColor:'#22f059',
+        border: "none",
     },
 });

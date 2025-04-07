@@ -11,8 +11,6 @@ function HomeScreen() {
     );
 }
  
- 
- 
 function ListScreen() {
     return (
         <View style={styles.container}>
