@@ -6,6 +6,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { authenticateUser } from '../services/authService.js';
 
+
 export default function Login({changeStatus}) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");

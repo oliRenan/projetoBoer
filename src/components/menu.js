@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Tela from './tela.js' ;
+import TelaJogos from './screen/listar.js'
 import Jogos from './screen/jogos.js'
 function HomeScreen() {
     return (
@@ -13,9 +14,7 @@ function HomeScreen() {
  
 function ListScreen() {
     return (
-        <View style={styles.container}>
-            <Text></Text>
-        </View>
+        <TelaJogos></TelaJogos>
     );
 }
  

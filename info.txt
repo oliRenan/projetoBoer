@@ -19,3 +19,66 @@ if (type === 'login') {
                     return;
                 });
         }
+
+
+
+            <TouchableOpacity
+                style={styles.handleSubmit}
+                onPress={handleSubmit}
+            >
+                <Text style={styles.loginText}>
+                    Dados no console.log
+                </Text>
+            </TouchableOpacity>
+ 
+
+
+
+async function handleInsert() {
+    //editar dados (verificando se os campos estão vazios)
+    if (nomeTarefa !== '' & descricao !== '' & dataInicio !== '' 
+& dataConclusao !== '' & prioridade !== '' & key !== '') {
+      firebase.database().ref('profisionais').child(key).update({
+        nometarefa: nomeTarefa,
+        descricao: descricao,
+        datainicio: dataInicio,
+        dateconclusao: dataConclusao,
+        prioridade: prioridade
+      })
+      Keyboard.dismiss();
+      alert('Tarefa Editada!');
+      clearFields();
+      setKey('');
+      return;
+    }
+    //cadastrar dados
+    let TarefasA = await firebase.database().ref('profissionais');
+    let chave = TarefasA.push().key;
+ 
+    TarefasA.child(chave).set({
+      nometarefa: nomeTarefa,
+      descricao: descricao,
+      datainicio: dataInicio,
+      dateconclusao: dataConclusao,
+      prioridade: prioridade
+    });
+    Keyboard.dismiss();
+    alert('Tarefa Cadastrada!');
+    clearFields();
+  }
+ 
+  function clearFields() {
+    setNomeTarefa(''),
+    setDescricao(''),
+    setDataInicio(''),
+    setDataConclusao(''),
+    setPrioridade('')
+  }
+
+
+
+
+
+
+
+

@@ -1,7 +1,8 @@
 import { Text } from "react-native-web";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Keyboard } from "react-native";
 import { TextInput, IconButton } from 'react-native-paper';
 import { useState } from "react";
+import firebase from '../../services/connectionFirebase.js';
 
 export default function Jogos() {
     const [nomeJogo, setNomeJogo] = useState('');
@@ -13,6 +14,7 @@ export default function Jogos() {
     const [error, setError] = useState('');
     const [fieldError, setFieldError] = useState('');
     const [tagError, setTagError] = useState(''); 
+    const [key , setKey] = useState('')
 
     const handleAddTag = () => {
         if (!novaTag.trim()) {
@@ -33,7 +35,7 @@ export default function Jogos() {
         setTags(tags.filter(t => t !== tag));
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!nomeJogo.trim() || !estudio.trim() || !plataforma.trim() || !campoExtra.trim()) {
             setFieldError('Todos os campos são obrigatórios.');
             return;
@@ -44,9 +46,6 @@ export default function Jogos() {
             return;
         }
 
-        setFieldError(''); 
-        setTagError('');  
-
         console.log({
             nomeJogo,
             estudio,
@@ -55,12 +54,44 @@ export default function Jogos() {
             tags
         });
 
+
+        setFieldError(''); 
+        setTagError('');  
+
+        await handleInsert ();
+
         setNomeJogo('')
         setEstudio('')
         setPlataforma('')
         setCampoExtra('')
         setTags([])
     };
+
+    const handleInsert = async () =>{
+
+        // firebase.database().ref('jogos').child(key).update({
+        //     campoExtra: campoExtra,
+        //     estudio: estudio,
+        //     nomeJogo:nomeJogo,
+        //     plataforma: plataforma,
+        //     tags:tags
+        // })
+        // Keyboard.dismiss();
+        // alert('Tarefa Editada!');
+        // setKey('');
+
+        let jogosA= await firebase.database().ref('jogos');
+        const chave = jogosA.push().key;
+
+        jogosA.child(chave).set({
+            campoExtra: campoExtra,
+            estudio: estudio,
+            nomeJogo:nomeJogo,
+            plataforma: plataforma,
+            tags:tags
+        });
+    }
+
 
     return (
         <View style={styles.container}>
@@ -145,7 +176,8 @@ export default function Jogos() {
                     Dados no console.log
                 </Text>
             </TouchableOpacity>
-        </View>
+
+       </View>
     );
 }
 
