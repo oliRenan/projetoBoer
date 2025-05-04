@@ -38,7 +38,6 @@ function handleDelete(){
 function handleEdit(){
 
 }
-
         return(
           <View style={{ flex: 1, padding: 10 }}>
             <Text>tela de listar</Text>

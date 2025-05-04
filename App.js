@@ -11,16 +11,23 @@ export default function App() {
  // return <Menu/>
   //
   
-  return (
+  // return (
+  //   <>
+  //     {!user ? (
+  //       <Login changeStatus={(user) => setUser(user)} />
+  //     ) : (
+  //         <Menu />
+  //     )}
+  //     <Toast />
+  //   </>
+  // );
+
+ return (
     <>
-      {!user ? (
-        <Login changeStatus={(user) => setUser(user)} />
-      ) : (
-          <Menu />
-        )}
-      {/* Toast deve estar fora das telas para funcionar globalmente */}
+      <Menu></Menu>
       <Toast />
     </>
   );
+
 
 }

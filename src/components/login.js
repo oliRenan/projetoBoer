@@ -20,12 +20,7 @@ export default function Login({changeStatus}) {
             position: 'bottom',
             visibilityTime: 2000,
         });
-
-
-
-
-
-  };   
+    };   
 
      function handleLogin() {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

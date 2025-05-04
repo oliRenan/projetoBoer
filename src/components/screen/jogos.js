@@ -1,9 +1,11 @@
 import { Text } from "react-native-web";
-import { View, StyleSheet, TouchableOpacity, Keyboard } from "react-native";
-import { ToastContainer, toast } from 'react-toastify';
+import { View, StyleSheet, TouchableOpacity, Keyboard, FlatList } from "react-native";
 import { TextInput, IconButton } from 'react-native-paper';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import firebase from '../../services/connectionFirebase.js';
+
+import Toast from 'react-native-toast-message';
+import ListJogos from "../list/listJogos.js";
 
 export default function Jogos() {
     const [nomeJogo, setNomeJogo] = useState('');
@@ -17,11 +19,47 @@ export default function Jogos() {
     const [tagError, setTagError] = useState(''); 
     const [key , setKey] = useState('')
 
+    const [jogos,setJogos] = useState([]); 
+    const [loading,setLoading] = useState(''); 
+
     const notify = (message) => {
-        toast.warn(message, {
-            position: 'bottom-right',
+        Toast.show({
+            type: 'success', // ou 'success' dependendo do caso
+            text1: message,
+            position: 'bottom',
+            visibilityTime: 2000,
         });
-    };
+    };   
+
+useEffect(() => {
+    async function dados() {
+      await firebase.database().ref('jogos').on('value', (snapshot) => {
+        setJogos([]);
+        snapshot.forEach((chilItem) => {
+          let data = {
+            key: chilItem.key,
+            nomeJogo: chilItem.val().nomeJogo,
+            estudio: chilItem.val().estudio,
+            plataforma: chilItem.val().plataforma,
+            campoExtra: chilItem.val().campoExtra,
+            tags: chilItem.val().tags,
+          };
+             setJogos(oldArray => [...oldArray, data].reverse());
+        })
+        setLoading(false);
+      })
+    }
+    dados();
+  }, []);
+
+
+function handleDelete(){
+
+}
+
+function handleEdit(){
+
+}
 
     const handleAddTag = () => {
         if (!novaTag.trim()) {
@@ -97,7 +135,7 @@ export default function Jogos() {
             plataforma: plataforma,
             tags:tags
         });
-notify("Jogo cadastrado com sucesso");
+        notify("Jogo cadastrado com sucesso");
 
     }
 
@@ -176,7 +214,6 @@ notify("Jogo cadastrado com sucesso");
                     </View>
                 ))}
             </View>
-
             <TouchableOpacity
                 style={styles.handleSubmit}
                 onPress={handleSubmit}
@@ -185,7 +222,20 @@ notify("Jogo cadastrado com sucesso");
                     Cadastrar Jogo
                 </Text>
             </TouchableOpacity>
-            <ToastContainer autoClose={1500}/>
+
+
+            {loading ? (
+                <ActivityIndicator color="#141414" size={50} />
+            ) : (
+                <FlatList
+                    keyExtractor={item => item.key}
+                    data={jogos}
+                    renderItem={({ item }) => (
+                        <ListJogos data={item} deleteItem={handleDelete} editItem={handleEdit} />
+                    )}
+                />
+
+            )}
        </View>
     );
 }
@@ -256,6 +306,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         margin: "auto",
         marginTop: 30,
+        marginBottom:20,
         width: 150,
         borderWidth: 2, 
         borderRadius : 5,
