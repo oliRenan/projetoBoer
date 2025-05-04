@@ -52,7 +52,9 @@ function handleEdit(){
                         <ListJogos data={item} deleteItem={handleDelete} editItem={handleEdit} />
                     )}
                 />
+
             )}
+
         </View>
         )
 }

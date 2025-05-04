@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { View, StyleSheet, Image, TouchableOpacity,ActivityIndicator } from "react-native";
 import { Card, Text, TextInput , Dialog, Portal, Button} from "react-native-paper";
 //import firebase from '../services/connectionFirebase';
-import { ToastContainer, toast } from 'react-toastify';
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { authenticateUser } from '../services/authService.js';
+
+import Toast from 'react-native-toast-message';
 
 
 export default function Login({changeStatus}) {
@@ -12,10 +13,18 @@ export default function Login({changeStatus}) {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [type, setType] = useState('login');
-    const notify= (message) => {
-        toast.warn(message, {
-            position: 'bottom-right',
-    });
+    const notify = (message) => {
+        Toast.show({
+            type: 'error', // ou 'success' dependendo do caso
+            text1: message,
+            position: 'bottom',
+            visibilityTime: 2000,
+        });
+
+
+
+
+
   };   
 
      function handleLogin() {
@@ -47,34 +56,31 @@ export default function Login({changeStatus}) {
             }
         }
 
+    setLoading(true)
+    authenticateUser(email, password, type)
+        .then((data) => {
+            console.log('Usuário autenticado:', data);
+            changeStatus(data.user.uid);
+            Toast.show({
+                type: 'success',
+                text1: type === 'login' ? 'Login bem-sucedido!' : 'Cadastrado com sucesso',
+                position: 'bottom',
+                visibilityTime: 3000,
+            });
+        })
+        .catch((error) => {
+            console.log('Erro:', error);
+            Toast.show({
+                type: 'error',
+                text1: type === 'login' ? 'E-mail ou senha não cadastrados!' : 'Erro ao Cadastrar!',
+                position: 'bottom',
+                visibilityTime: 3000,
+            });
+        })
+        .finally(() => {
+            setLoading(false);
+        });
 
-        toast.promise(
-        authenticateUser(email, password, type),
-        {
-            pending: {
-                render() {
-                    return "Autenticando...";
-                },
-            },
-            success: {
-                render({ data }) {
-                    console.log('Usuário autenticado:', data); // Verifique se isso aparece
-                    changeStatus(data.user.uid); // Chame a função de mudança de status
-                    return type === 'login' ? 'Login bem-sucedido!' : 'Cadastrado com sucesso';
-                },
-                    autoClose: 3000,
-            },
-            error: {
-                render({ data }) {
-                    console.log('Erro:', data); // Verifique se há algum erro
-                    return type === 'login' ? 'E-mail ou senha não cadastrados!' : 'Erro ao Cadastrar!';
-                }
-            }
-        }
-    ).finally(() => {
-        setLoading(false);
-    });
-  
     }
     return (
         <View style={styles.container}>
@@ -125,7 +131,6 @@ export default function Login({changeStatus}) {
                     {type === "login" ? "Criar uma conta?" : "Já possuo uma conta!"}
                 </Text>
             </TouchableOpacity>
-                  <ToastContainer autoClose={1500}/>
 
         </View>
     );

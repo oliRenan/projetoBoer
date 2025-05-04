@@ -1,5 +1,6 @@
 import { Text } from "react-native-web";
 import { View, StyleSheet, TouchableOpacity, Keyboard } from "react-native";
+import { ToastContainer, toast } from 'react-toastify';
 import { TextInput, IconButton } from 'react-native-paper';
 import { useState } from "react";
 import firebase from '../../services/connectionFirebase.js';
@@ -15,6 +16,12 @@ export default function Jogos() {
     const [fieldError, setFieldError] = useState('');
     const [tagError, setTagError] = useState(''); 
     const [key , setKey] = useState('')
+
+    const notify = (message) => {
+        toast.warn(message, {
+            position: 'bottom-right',
+        });
+    };
 
     const handleAddTag = () => {
         if (!novaTag.trim()) {
@@ -59,7 +66,7 @@ export default function Jogos() {
         setTagError('');  
 
         await handleInsert ();
-
+        
         setNomeJogo('')
         setEstudio('')
         setPlataforma('')
@@ -90,6 +97,8 @@ export default function Jogos() {
             plataforma: plataforma,
             tags:tags
         });
+notify("Jogo cadastrado com sucesso");
+
     }
 
 
@@ -173,10 +182,10 @@ export default function Jogos() {
                 onPress={handleSubmit}
             >
                 <Text style={styles.loginText}>
-                    Dados no console.log
+                    Cadastrar Jogo
                 </Text>
             </TouchableOpacity>
-
+            <ToastContainer autoClose={1500}/>
        </View>
     );
 }
