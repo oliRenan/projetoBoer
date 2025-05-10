@@ -10,7 +10,7 @@ export default function TelaJogos(){
     const [jogos,setJogos] = useState([]); 
     const [loading,setLoading] = useState(''); 
 
-useEffect(() => {
+  useEffect(() => {
     async function dados() {
       await firebase.database().ref('jogos').on('value', (snapshot) => {
         setJogos([]);
@@ -23,7 +23,7 @@ useEffect(() => {
             campoExtra: chilItem.val().campoExtra,
             tags: chilItem.val().tags,
           };
-             setJogos(oldArray => [...oldArray, data].reverse());
+          setJogos(oldArray => [...oldArray, data].reverse());
         })
         setLoading(false);
       })

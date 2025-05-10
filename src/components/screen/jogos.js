@@ -1,7 +1,7 @@
 import { Text } from "react-native-web";
 import { View, StyleSheet, TouchableOpacity, Keyboard, FlatList } from "react-native";
 import { TextInput, IconButton } from 'react-native-paper';
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import firebase from '../../services/connectionFirebase.js';
 
 import Toast from 'react-native-toast-message';
@@ -12,12 +12,17 @@ export default function Jogos() {
     const [estudio, setEstudio] = useState('');
     const [plataforma, setPlataforma] = useState('');
     const [campoExtra, setCampoExtra] = useState('');
+
     const [tags, setTags] = useState([]);
     const [novaTag, setNovaTag] = useState('');
+    const [tagError, setTagError] = useState(''); 
+    const [editTag, setEditTag] = useState(null); 
+    const [newEditTag, setNewEditTag] = useState(''); 
+
     const [error, setError] = useState('');
     const [fieldError, setFieldError] = useState('');
-    const [tagError, setTagError] = useState(''); 
     const [key , setKey] = useState('')
+    const inputRef = useRef(null);
 
     const [jogos,setJogos] = useState([]); 
     const [loading,setLoading] = useState(''); 
@@ -53,13 +58,23 @@ useEffect(() => {
   }, []);
 
 
-function handleDelete(){
+    function handleDelete(key){
+        firebase.database().ref('jogos').child(key).remove()
+            .then(() => {
+                const findJogos = tarefas.filter(item => item.key !== key)
+                setJogos(findJogos)
+            })
+        alert('Joago Excluída!');
+    }
 
-}
-
-function handleEdit(){
-
-}
+    function handleEdit(data){
+        setKey(data.key),
+        setNomeJogo(data.nomeJogo),
+        setEstudio(data.estudio),
+        setPlataforma(data.plataforma),
+        setCampoExtra(data.campoExtra),
+        setTags(data.tags || []); // Adiciona as tags ao estado
+    }
 
     const handleAddTag = () => {
         if (!novaTag.trim()) {
@@ -78,6 +93,26 @@ function handleEdit(){
     };
     const handleRemoveTag = (tag) => {
         setTags(tags.filter(t => t !== tag));
+    };
+
+
+    const initNewtag = (index, valor) => {
+        setEditTag(index);
+        setNewEditTag(valor);
+    };
+
+    const saveEditTag = (index) => {
+        if (!newEditTag.trim()) {
+            setError('A tag não pode ficar vazia.');
+            return;
+        }
+
+        const tagsAtualizadas = [...tags];
+        tagsAtualizadas[index] = newEditTag;
+        setTags(tagsAtualizadas);
+        setEditTag(null);
+        setNewEditTag('');
+        setError('');
     };
 
     const handleSubmit = async () => {
@@ -112,32 +147,62 @@ function handleEdit(){
         setTags([])
     };
 
-    const handleInsert = async () =>{
+    // const handleInsert = async () =>{
+    //
+    //     // firebase.database().ref('jogos').child(key).update({
+    //     //     campoExtra: campoExtra,
+    //     //     estudio: estudio,
+    //     //     nomeJogo:nomeJogo,
+    //     //     plataforma: plataforma,
+    //     //     tags:tags
+    //     // })
+    //     // Keyboard.dismiss();
+    //     // alert('Tarefa Editada!');
+    //     // setKey('');
+    //
+    //     let jogosA= await firebase.database().ref('jogos');
+    //     const chave = jogosA.push().key;
+    //
+    //     jogosA.child(chave).set({
+    //         campoExtra: campoExtra,
+    //         estudio: estudio,
+    //         nomeJogo:nomeJogo,
+    //         plataforma: plataforma,
+    //         tags:tags
+    //     });
+    //     notify("Jogo cadastrado com sucesso");
+    //
+    // }
+    //
 
-        // firebase.database().ref('jogos').child(key).update({
-        //     campoExtra: campoExtra,
-        //     estudio: estudio,
-        //     nomeJogo:nomeJogo,
-        //     plataforma: plataforma,
-        //     tags:tags
-        // })
-        // Keyboard.dismiss();
-        // alert('Tarefa Editada!');
-        // setKey('');
-
-        let jogosA= await firebase.database().ref('jogos');
+const handleInsert = async () => {
+    if (key) {
+        // Atualiza um jogo existente
+        await firebase.database().ref('jogos').child(key).update({
+            campoExtra,
+            estudio,
+            nomeJogo,
+            plataforma,
+            tags
+        });
+        notify("Jogo atualizado com sucesso");
+        setKey('');
+    } else {
+        // Cria um novo jogo
+        let jogosA = await firebase.database().ref('jogos');
         const chave = jogosA.push().key;
 
         jogosA.child(chave).set({
-            campoExtra: campoExtra,
-            estudio: estudio,
-            nomeJogo:nomeJogo,
-            plataforma: plataforma,
-            tags:tags
+            campoExtra,
+            estudio,
+            nomeJogo,
+            plataforma,
+            tags
         });
         notify("Jogo cadastrado com sucesso");
-
     }
+    Keyboard.dismiss();
+};
 
 
     return (
@@ -151,6 +216,7 @@ function handleEdit(){
                 value={nomeJogo}
                 onChangeText={setNomeJogo}
                 activeOutlineColor="#22f059"
+                ref={inputRef}
             />
             <TextInput
                 style={styles.inputs}
@@ -160,6 +226,7 @@ function handleEdit(){
                 value={estudio}
                 onChangeText={setEstudio}
                 activeOutlineColor="#22f059"
+                ref={inputRef}
             />
             <TextInput
                 style={styles.inputs}
@@ -169,6 +236,7 @@ function handleEdit(){
                 value={plataforma}
                 onChangeText={setPlataforma}
                 activeOutlineColor="#22f059"
+                ref={inputRef}
             />
             <TextInput
                 style={styles.inputs}
@@ -178,6 +246,7 @@ function handleEdit(){
                 value={campoExtra}
                 onChangeText={setCampoExtra}
                 activeOutlineColor="#22f059"
+                ref={inputRef}
             />
             
             <View style={styles.inputContainer}>
@@ -190,6 +259,7 @@ function handleEdit(){
                     onChangeText={setNovaTag}
                     onSubmitEditing={handleAddTag}
                     activeOutlineColor="#22f059"
+                    ref={inputRef}
                 />
                  <IconButton
                      icon="plus"
@@ -204,16 +274,44 @@ function handleEdit(){
             {fieldError ? <Text style={styles.errorText}>{fieldError}</Text> : null}
             {tagError ? <Text style={styles.errorText}>{tagError}</Text> : null}
 
-            <View style={styles.tagsContainer}>
-                {tags.map((tag, index) => (
-                    <View key={index} style={styles.tag}>
-                        <Text style={styles.tagText}>{tag}</Text>
-                        <TouchableOpacity onPress={() => handleRemoveTag(tag)}>
-                            <Text style={styles.removeTagText}>x</Text>
-                        </TouchableOpacity>
-                    </View>
-                ))}
-            </View>
+            {/* <View style={styles.tagsContainer}> */}
+            {/*     {tags.map((tag, index) => ( */}
+            {/*         <View key={index} style={styles.tag}> */}
+            {/*             <Text style={styles.tagText}>{tag}</Text> */}
+            {/*             <TouchableOpacity onPress={() => handleRemoveTag(tag)}> */}
+            {/*                 <Text style={styles.removeTagText}>x</Text> */}
+            {/*             </TouchableOpacity> */}
+            {/*         </View> */}
+            {/*     ))} */}
+            {/* </View> */}
+
+            {tags.map((tag, index) => (
+                <View key={index} style={styles.tag}>
+                    {editTag === index ? (
+                        <>
+                            <TextInput
+                                style={styles.editTagInput}
+                                mode="flat"
+                                value={newEditTag}
+                                onChangeText={setNewEditTag}
+                            />
+                            <TouchableOpacity onPress={() => saveEditTag(index)}>
+                                <Text style={styles.salvarTagText}>Salvar</Text>
+                            </TouchableOpacity>
+                        </>
+                    ) : (                            <>
+                            <Text style={styles.tagText}>{tag}</Text>
+                            <TouchableOpacity onPress={() => initNewtag(index, tag)}>
+                                <Text style={styles.editarTagText}>✏️</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => handleRemoveTag(tag)}>
+                                <Text style={styles.removeTagText}>x</Text>
+                            </TouchableOpacity>
+                        </>
+                        )}
+                </View>
+            ))}
+
             <TouchableOpacity
                 style={styles.handleSubmit}
                 onPress={handleSubmit}
@@ -315,4 +413,22 @@ const styles = StyleSheet.create({
         backgroundColor:'#22f059',
         border: "none",
     },
+
+    editTagInput: {
+        backgroundColor: '#fff',
+        padding: 4,
+        marginRight: 5,
+        minWidth: 100,
+    },
+    salvarTagText: {
+        color: 'green',
+        marginLeft: 8,
+        fontWeight: 'bold',
+    },
+    editarTagText: {
+        marginLeft: 8,
+        color: '#007bff',
+    },
+
+
 });
