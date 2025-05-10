@@ -6,6 +6,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import Tela from './tela.js' ;
 import TelaJogos from './screen/listar.js'
 import Jogos from './screen/jogos.js'
+import Reportar from './screen/reportar.js'
 function HomeScreen() {
     return (
         <Tela></Tela>
@@ -23,9 +24,7 @@ function ListScreen() {
  
 function PostScreen() {
     return (
-        <View style={styles.container}>
-            <Text></Text>
-        </View>
+    <Reportar></Reportar>
     );
 }
  
@@ -62,8 +61,8 @@ export default function Menu() {
                             case 'Jogos':
                                 iconName = 'gamepad';
                                 break;
-                            case 'Produtos':
-                                iconName = 'flask';
+                            case 'Reportar':
+                                iconName = 'bug';
                                 break;
                             case 'Ler API':
                                 iconName = 'android';
@@ -92,7 +91,7 @@ export default function Menu() {
                     component={PostScreen2}
                 />
                 <Tab.Screen
-                    name="Produtos"
+                    name="Reportar"
                     component={PostScreen}
                 />
                 <Tab.Screen name="Ler API" component={APIScreen} />
