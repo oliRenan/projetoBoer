@@ -1,9 +1,8 @@
 import { Text } from "react-native-web";
-import { View, StyleSheet, TouchableOpacity, Keyboard, FlatList } from "react-native";
-import { TextInput, IconButton } from 'react-native-paper';
+import { View, StyleSheet, TouchableOpacity, Keyboard, FlatList, ActivityIndicator } from "react-native";
+import { TextInput, IconButton, Dialog, Portal, Button } from 'react-native-paper';
 import { useEffect, useRef, useState } from "react";
 import firebase from '../../services/connectionFirebase.js';
-
 import Toast from 'react-native-toast-message';
 import ListJogos from "../list/listJogos.js";
 
@@ -12,89 +11,99 @@ export default function Jogos() {
     const [estudio, setEstudio] = useState('');
     const [plataforma, setPlataforma] = useState('');
     const [campoExtra, setCampoExtra] = useState('');
-
     const [tags, setTags] = useState([]);
     const [novaTag, setNovaTag] = useState('');
-    const [tagError, setTagError] = useState(''); 
-    const [editTag, setEditTag] = useState(null); 
-    const [newEditTag, setNewEditTag] = useState(''); 
-
+    const [tagError, setTagError] = useState('');
+    const [editTag, setEditTag] = useState(null);
+    const [newEditTag, setNewEditTag] = useState('');
     const [error, setError] = useState('');
     const [fieldError, setFieldError] = useState('');
-    const [key , setKey] = useState('')
+    const [key, setKey] = useState('');
+    const [jogos, setJogos] = useState([]);
+    const [loading, setLoading] = useState('');
+    const [dialogVisible, setDialogVisible] = useState(false); 
+    const [deleteKey, setDeleteKey] = useState(''); 
     const inputRef = useRef(null);
-
-    const [jogos,setJogos] = useState([]); 
-    const [loading,setLoading] = useState(''); 
 
     const notify = (message) => {
         Toast.show({
-            type: 'success', // ou 'success' dependendo do caso
+            type: 'success',
             text1: message,
             position: 'bottom',
             visibilityTime: 2000,
         });
-    };   
+    };
 
-useEffect(() => {
-    async function dados() {
-      await firebase.database().ref('jogos').on('value', (snapshot) => {
-        setJogos([]);
-        snapshot.forEach((chilItem) => {
-          let data = {
-            key: chilItem.key,
-            nomeJogo: chilItem.val().nomeJogo,
-            estudio: chilItem.val().estudio,
-            plataforma: chilItem.val().plataforma,
-            campoExtra: chilItem.val().campoExtra,
-            tags: chilItem.val().tags,
-          };
-             setJogos(oldArray => [...oldArray, data].reverse());
-        })
-        setLoading(false);
-      })
-    }
-    dados();
-  }, []);
+    useEffect(() => {
+        async function dados() {
+            await firebase.database().ref('jogos').on('value', (snapshot) => {
+                setJogos([]);
+                snapshot.forEach((chilItem) => {
+                    let data = {
+                        key: chilItem.key,
+                        nomeJogo: chilItem.val().nomeJogo,
+                        estudio: chilItem.val().estudio,
+                        plataforma: chilItem.val().plataforma,
+                        campoExtra: chilItem.val().campoExtra,
+                        tags: chilItem.val().tags,
+                    };
+                    setJogos(oldArray => [...oldArray, data].reverse());
+                });
+                setLoading(false);
+            });
+        }
+        dados();
+    }, []);
 
+    const showDeleteDialog = (key) => {
+        setDeleteKey(key);
+        setDialogVisible(true);
+    };
 
-    function handleDelete(key){
+    const hideDeleteDialog = () => {
+        setDialogVisible(false);
+        setDeleteKey('');
+    };
+
+    const handleDelete = (key) => {
         firebase.database().ref('jogos').child(key).remove()
             .then(() => {
-                const findJogos = tarefas.filter(item => item.key !== key)
-                setJogos(findJogos)
+                const findJogos = jogos.filter(item => item.key !== key);
+                setJogos(findJogos);
+                notify('Jogo excluído com sucesso!');
             })
-        alert('Joago Excluída!');
-    }
+            .catch(() => {
+                setError('Erro ao excluir o jogo.');
+            });
+        hideDeleteDialog();
+    };
 
-    function handleEdit(data){
-        setKey(data.key),
-        setNomeJogo(data.nomeJogo),
-        setEstudio(data.estudio),
-        setPlataforma(data.plataforma),
-        setCampoExtra(data.campoExtra),
-        setTags(data.tags || []); // Adiciona as tags ao estado
-    }
+    const handleEdit = (data) => {
+        setKey(data.key);
+        setNomeJogo(data.nomeJogo);
+        setEstudio(data.estudio);
+        setPlataforma(data.plataforma);
+        setCampoExtra(data.campoExtra);
+        setTags(data.tags || []);
+    };
 
     const handleAddTag = () => {
         if (!novaTag.trim()) {
             setError('A tag não pode ser vazia.');
             return;
         }
-
         if (tags.includes(novaTag)) {
             setError('Essa tag já foi adicionada.');
             return;
         }
-
         setTags([...tags, novaTag]);
         setNovaTag('');
         setError('');
     };
+
     const handleRemoveTag = (tag) => {
         setTags(tags.filter(t => t !== tag));
     };
-
 
     const initNewtag = (index, valor) => {
         setEditTag(index);
@@ -106,7 +115,6 @@ useEffect(() => {
             setError('A tag não pode ficar vazia.');
             return;
         }
-
         const tagsAtualizadas = [...tags];
         tagsAtualizadas[index] = newEditTag;
         setTags(tagsAtualizadas);
@@ -120,90 +128,45 @@ useEffect(() => {
             setFieldError('Todos os campos são obrigatórios.');
             return;
         }
-
         if (tags.length === 0) {
             setTagError('Você precisa adicionar pelo menos uma tag.');
             return;
         }
-
-        console.log({
-            nomeJogo,
-            estudio,
-            plataforma,
-            campoExtra,
-            tags
-        });
-
-
-        setFieldError(''); 
-        setTagError('');  
-
-        await handleInsert ();
-        
-        setNomeJogo('')
-        setEstudio('')
-        setPlataforma('')
-        setCampoExtra('')
-        setTags([])
+        setFieldError('');
+        setTagError('');
+        await handleInsert();
+        setNomeJogo('');
+        setEstudio('');
+        setPlataforma('');
+        setCampoExtra('');
+        setTags([]);
     };
 
-    // const handleInsert = async () =>{
-    //
-    //     // firebase.database().ref('jogos').child(key).update({
-    //     //     campoExtra: campoExtra,
-    //     //     estudio: estudio,
-    //     //     nomeJogo:nomeJogo,
-    //     //     plataforma: plataforma,
-    //     //     tags:tags
-    //     // })
-    //     // Keyboard.dismiss();
-    //     // alert('Tarefa Editada!');
-    //     // setKey('');
-    //
-    //     let jogosA= await firebase.database().ref('jogos');
-    //     const chave = jogosA.push().key;
-    //
-    //     jogosA.child(chave).set({
-    //         campoExtra: campoExtra,
-    //         estudio: estudio,
-    //         nomeJogo:nomeJogo,
-    //         plataforma: plataforma,
-    //         tags:tags
-    //     });
-    //     notify("Jogo cadastrado com sucesso");
-    //
-    // }
-    //
-
-const handleInsert = async () => {
-    if (key) {
-        // Atualiza um jogo existente
-        await firebase.database().ref('jogos').child(key).update({
-            campoExtra,
-            estudio,
-            nomeJogo,
-            plataforma,
-            tags
-        });
-        notify("Jogo atualizado com sucesso");
-        setKey('');
-    } else {
-        // Cria um novo jogo
-        let jogosA = await firebase.database().ref('jogos');
-        const chave = jogosA.push().key;
-
-        jogosA.child(chave).set({
-            campoExtra,
-            estudio,
-            nomeJogo,
-            plataforma,
-            tags
-        });
-        notify("Jogo cadastrado com sucesso");
-    }
-    Keyboard.dismiss();
-};
-
+    const handleInsert = async () => {
+        if (key) {
+            await firebase.database().ref('jogos').child(key).update({
+                campoExtra,
+                estudio,
+                nomeJogo,
+                plataforma,
+                tags
+            });
+            notify("Jogo atualizado com sucesso");
+            setKey('');
+        } else {
+            let jogosA = await firebase.database().ref('jogos');
+            const chave = jogosA.push().key;
+            jogosA.child(chave).set({
+                campoExtra,
+                estudio,
+                nomeJogo,
+                plataforma,
+                tags
+            });
+            notify("Jogo cadastrado com sucesso");
+        }
+        Keyboard.dismiss();
+    };
 
     return (
         <View style={styles.container}>
@@ -248,7 +211,6 @@ const handleInsert = async () => {
                 activeOutlineColor="#22f059"
                 ref={inputRef}
             />
-            
             <View style={styles.inputContainer}>
                 <TextInput
                     style={[styles.inputs, styles.inputTag]}
@@ -261,30 +223,17 @@ const handleInsert = async () => {
                     activeOutlineColor="#22f059"
                     ref={inputRef}
                 />
-                 <IconButton
-                     icon="plus"
-                     size={20}
-                     onPress={handleAddTag}
-                     style={styles.addButton}
-                     iconColor="white"
-                 />
+                <IconButton
+                    icon="plus"
+                    size={20}
+                    onPress={handleAddTag}
+                    style={styles.addButton}
+                    iconColor="white"
+                />
             </View>
-
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
             {fieldError ? <Text style={styles.errorText}>{fieldError}</Text> : null}
             {tagError ? <Text style={styles.errorText}>{tagError}</Text> : null}
-
-            {/* <View style={styles.tagsContainer}> */}
-            {/*     {tags.map((tag, index) => ( */}
-            {/*         <View key={index} style={styles.tag}> */}
-            {/*             <Text style={styles.tagText}>{tag}</Text> */}
-            {/*             <TouchableOpacity onPress={() => handleRemoveTag(tag)}> */}
-            {/*                 <Text style={styles.removeTagText}>x</Text> */}
-            {/*             </TouchableOpacity> */}
-            {/*         </View> */}
-            {/*     ))} */}
-            {/* </View> */}
-
             {tags.map((tag, index) => (
                 <View key={index} style={styles.tag}>
                     {editTag === index ? (
@@ -299,7 +248,8 @@ const handleInsert = async () => {
                                 <Text style={styles.salvarTagText}>Salvar</Text>
                             </TouchableOpacity>
                         </>
-                    ) : (                            <>
+                    ) : (
+                        <>
                             <Text style={styles.tagText}>{tag}</Text>
                             <TouchableOpacity onPress={() => initNewtag(index, tag)}>
                                 <Text style={styles.editarTagText}>✏️</Text>
@@ -308,10 +258,9 @@ const handleInsert = async () => {
                                 <Text style={styles.removeTagText}>x</Text>
                             </TouchableOpacity>
                         </>
-                        )}
+                    )}
                 </View>
             ))}
-
             <TouchableOpacity
                 style={styles.handleSubmit}
                 onPress={handleSubmit}
@@ -320,8 +269,18 @@ const handleInsert = async () => {
                     Cadastrar Jogo
                 </Text>
             </TouchableOpacity>
-
-
+            <Portal>
+                <Dialog visible={dialogVisible} onDismiss={hideDeleteDialog}>
+                    <Dialog.Title>Confirmar Exclusão</Dialog.Title>
+                    <Dialog.Content>
+                        <Text>Deseja realmente excluir este jogo?</Text>
+                    </Dialog.Content>
+                    <Dialog.Actions>
+                        <Button onPress={hideDeleteDialog}>Cancelar</Button>
+                        <Button onPress={() => handleDelete(deleteKey)}>Excluir</Button>
+                    </Dialog.Actions>
+                </Dialog>
+            </Portal>
             {loading ? (
                 <ActivityIndicator color="#141414" size={50} />
             ) : (
@@ -329,12 +288,11 @@ const handleInsert = async () => {
                     keyExtractor={item => item.key}
                     data={jogos}
                     renderItem={({ item }) => (
-                        <ListJogos data={item} deleteItem={handleDelete} editItem={handleEdit} />
+                        <ListJogos data={item} deleteItem={showDeleteDialog} editItem={handleEdit} />
                     )}
                 />
-
             )}
-       </View>
+        </View>
     );
 }
 
@@ -348,14 +306,14 @@ const styles = StyleSheet.create({
         marginTop: 12,
     },
     inputContainer: {
-         flexDirection: 'row',
-         alignItems: 'center',
-         justifyContent: "center",
-         alignItems: "baseline",
-         gap: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: "center",
+        alignItems: "baseline",
+        gap: 12,
     },
     inputTag: {
-        flex: 1, 
+        flex: 1,
     },
     addButton: {
         backgroundColor: '#22f059',
@@ -404,16 +362,15 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         margin: "auto",
         marginTop: 30,
-        marginBottom:20,
+        marginBottom: 20,
         width: 150,
-        borderWidth: 2, 
-        borderRadius : 5,
+        borderWidth: 2,
+        borderRadius: 5,
         height: 50,
-        width:200,
-        backgroundColor:'#22f059',
+        width: 200,
+        backgroundColor: '#22f059',
         border: "none",
     },
-
     editTagInput: {
         backgroundColor: '#fff',
         padding: 4,
@@ -429,6 +386,4 @@ const styles = StyleSheet.create({
         marginLeft: 8,
         color: '#007bff',
     },
-
-
 });
