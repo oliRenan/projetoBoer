@@ -1,6 +1,6 @@
 import { Text } from "react-native-web";
 import { View, StyleSheet, TouchableOpacity, Keyboard, FlatList, ActivityIndicator } from "react-native";
-import { TextInput, IconButton, Dialog, Portal, Button } from 'react-native-paper';
+import { TextInput, IconButton, Dialog, Portal, Button , Icon} from 'react-native-paper';
 import { useEffect, useRef, useState } from "react";
 import firebase from '../../services/connectionFirebase.js';
 import Toast from 'react-native-toast-message';
@@ -170,7 +170,6 @@ export default function Jogos() {
 
     return (
         <View style={styles.container}>
-            <Text>Teste tela jogos</Text>
             <TextInput
                 style={styles.inputs}
                 label='Nome do jogo'
@@ -240,9 +239,10 @@ export default function Jogos() {
                         <>
                             <TextInput
                                 style={styles.editTagInput}
-                                mode="flat"
+                                mode="outlined"
                                 value={newEditTag}
                                 onChangeText={setNewEditTag}
+                                activeOutlineColor="#22f059"
                             />
                             <TouchableOpacity onPress={() => saveEditTag(index)}>
                                 <Text style={styles.salvarTagText}>Salvar</Text>
@@ -252,10 +252,10 @@ export default function Jogos() {
                         <>
                             <Text style={styles.tagText}>{tag}</Text>
                             <TouchableOpacity onPress={() => initNewtag(index, tag)}>
-                                <Text style={styles.editarTagText}>✏️</Text>
+                                <Text style={styles.editarTagText}><Icon source="note-edit" size={15} /></Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={() => handleRemoveTag(tag)}>
-                                <Text style={styles.removeTagText}>x</Text>
+                                <Text style={styles.removeTagText}><Icon source="close-thick" size={15}/></Text>
                             </TouchableOpacity>
                         </>
                     )}
@@ -335,7 +335,8 @@ const styles = StyleSheet.create({
         marginTop: 12,
     },
     tag: {
-        backgroundColor: '#e0e0e0',
+        // backgroundColor: '#fff',
+        backgroundColor: 'none',
         borderRadius: 15,
         padding: 5,
         margin: 5,
@@ -373,12 +374,13 @@ const styles = StyleSheet.create({
     },
     editTagInput: {
         backgroundColor: '#fff',
-        padding: 4,
-        marginRight: 5,
-        minWidth: 100,
+        padding: 2,
+        // marginRight: 5,
+        height:'35',
     },
     salvarTagText: {
-        color: 'green',
+        fontSize:'20',
+        color: '#22f059',
         marginLeft: 8,
         fontWeight: 'bold',
     },

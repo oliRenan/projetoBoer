@@ -40,19 +40,19 @@ function handleEdit(){
 }
         return(
           <View style={{ flex: 1, padding: 10 }}>
-            <Text>tela de listar</Text>
-            {loading ? (
-                <ActivityIndicator color="#141414" size={50} />
-            ) : (
-                <FlatList
-                    keyExtractor={item => item.key}
-                    data={jogos}
-                    renderItem={({ item }) => (
-                        <ListJogos data={item} deleteItem={handleDelete} editItem={handleEdit} />
-                    )}
-                />
-
-            )}
+            {/* <Text>tela de listar</Text> */}
+            {/* {loading ? ( */}
+            {/*     <ActivityIndicator color="#141414" size={50} /> */}
+            {/* ) : ( */}
+            {/*     <FlatList */}
+            {/*         keyExtractor={item => item.key} */}
+            {/*         data={jogos} */}
+            {/*         renderItem={({ item }) => ( */}
+            {/*             <ListJogos data={item} deleteItem={handleDelete} editItem={handleEdit} /> */}
+            {/*         )} */}
+            {/*     /> */}
+            {/**/}
+            {/* )} */}
 
         </View>
         )
