@@ -89,6 +89,7 @@ export default function Login({changeStatus}) {
                         mode="outlined"
                         label="E-mail"
                         value={email}
+                        activeOutlineColor="#22f059"
                         onChangeText={(text) => setEmail(text)}
                     />
                     <TextInput
@@ -98,6 +99,7 @@ export default function Login({changeStatus}) {
                         secureTextEntry
                         maxLength={30}
                         value={password}
+                        activeOutlineColor="#22f059"
                         onChangeText={(text) => setPassword(text)}
                     />
                 </Card.Content>

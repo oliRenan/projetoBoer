@@ -37,9 +37,20 @@ export default function App() {
   // );
 
  return (
+    // <PaperProvider theme={lightTheme}>
+    // <>
+    //   {!user ? (
+    //     <Login changeStatus={(user) => setUser(user)} />
+    //   ) : (
+    //       <Menu />
+    //   )}
+    //   <Toast />
+    // </>
+    //   {/* <Menu></Menu> */}
+    //   {/* <Toast /> */}
+    // </PaperProvider>
     <PaperProvider theme={lightTheme}>
-      <Menu></Menu>
-      <Toast />
+      <Menu />
     </PaperProvider>
   );
 

@@ -7,6 +7,8 @@ import Tela from './tela.js' ;
 import TelaJogos from './screen/listar.js'
 import Jogos from './screen/jogos.js'
 import Reportar from './screen/reportar.js'
+import CrudApi from './screen/crudApi.js'
+
 function HomeScreen() {
     return (
         <Tela></Tela>
@@ -36,9 +38,7 @@ function PostScreen2() {
  
 function APIScreen() {
     return (
-        <View style={styles.container}>
-            <Text></Text>
-        </View>
+    <CrudApi/>
     );
 }
  
@@ -64,7 +64,7 @@ export default function Menu() {
                             case 'Reportar':
                                 iconName = 'bug';
                                 break;
-                            case 'Ler API':
+                            case 'teste':
                                 iconName = 'android';
                                 break;
                             default:
@@ -94,7 +94,9 @@ export default function Menu() {
                     name="Reportar"
                     component={PostScreen}
                 />
-                <Tab.Screen name="Ler API" component={APIScreen} />
+                <Tab.Screen 
+                    name="teste"
+                    component={APIScreen} />
             </Tab.Navigator>
         </NavigationContainer>
     );
