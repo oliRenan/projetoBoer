@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { TextInput, Portal, Dialog, Button as PaperButton } from 'react-native-paper';
 import axios from 'axios';
-import Icon from 'react-native-vector-icons/Feather'; 
- 
-const API_URL = 'https://682b1681ab2b5004cb38ff96.mockapi.io/recorde'; 
- 
+import Icon from 'react-native-vector-icons/Feather';
+
+const API_URL = 'https://682b1681ab2b5004cb38ff96.mockapi.io/recorde';
+
 export default function CrudApi() {
   const [recorde, setRecorde] = useState([]);
   const [usuario, setUsuario] = useState('');
   const [tempo, setTempo] = useState('');
   const [data, setDate] = useState('');
-  const [modalidae, setModalidade ] = useState('');
+  const [modalidae, setModalidade] = useState('');
   const [editingRecorde, setEditing] = useState(null);
- 
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [selectedRecordeId, setSelectedRecordeId] = useState(null);
+  const [erros, setErros] = useState({});
+
   useEffect(() => {
     buscarRecordes();
   }, []);
- 
+
   const buscarRecordes = async () => {
     try {
       const response = await axios.get(API_URL);
@@ -26,21 +30,51 @@ export default function CrudApi() {
       alert('Nenhum recorde foi registrado');
     }
   };
- 
+
+  const validarCampos = () => {
+    const novosErros = {};
+
+    if (!usuario.trim()) novosErros.usuario = 'Usuário é obrigatório.';
+    if (!tempo.trim()) {
+      novosErros.tempo = 'Tempo é obrigatório.';
+    } else if (!/^\d+$/.test(tempo)) {
+      novosErros.tempo = 'Tempo deve conter apenas números.';
+    }
+
+    if (!data.trim()) {
+      novosErros.data = 'Data é obrigatória.';
+    } else if (!/^\d{2}\/\d{2}\/\d{4}$/.test(data)) {
+      novosErros.data = 'Data deve estar no formato DD/MM/AAAA.';
+    }
+
+    if (!modalidae.trim()) novosErros.modalidae = 'Modalidade é obrigatória.';
+
+    setErros(novosErros);
+    return Object.keys(novosErros).length === 0;
+  };
+
+  const limparCampos = () => {
+    setUsuario('');
+    setTempo('');
+    setDate('');
+    setModalidade('');
+    setErros({});
+    setEditing(null);
+  };
+
   const handleCreate = async () => {
+    if (!validarCampos()) return;
+
     try {
       const newRecorde = { usuario, tempo, data, modalidae };
       await axios.post(API_URL, newRecorde);
       buscarRecordes();
-      setUsuario('');
-      setTempo('');
-      setDate('');
-      setModalidade('');
+      limparCampos();
     } catch (error) {
       console.error('Erro ao registrar recorde', error);
     }
   };
- 
+
   const handleCarregar = (recorde) => {
     setUsuario(recorde.usuario);
     setTempo(recorde.tempo);
@@ -48,22 +82,20 @@ export default function CrudApi() {
     setModalidade(recorde.modalidae);
     setEditing(recorde);
   };
- 
+
   const handleUpdate = async () => {
+    if (!validarCampos()) return;
+
     try {
-      const updatedRecorde = { usuario, tempo, data, modalidae};
+      const updatedRecorde = { usuario, tempo, data, modalidae };
       await axios.put(`${API_URL}/${editingRecorde.id}`, updatedRecorde);
       buscarRecordes();
-      setUsuario('');
-      setTempo('');
-      setDate('');
-      setModalidade('');
-      setEditing(null);
+      limparCampos();
     } catch (error) {
-      console.error('Erro ao recorde', error);
+      console.error('Erro ao atualizar recorde', error);
     }
   };
- 
+
   const handleDelete = async (recordeId) => {
     try {
       await axios.delete(`${API_URL}/${recordeId}`);
@@ -72,67 +104,123 @@ export default function CrudApi() {
       console.error('Erro ao deletar recorde', error);
     }
   };
- 
+
+  const showDeleteDialog = (id) => {
+    setSelectedRecordeId(id);
+    setDialogVisible(true);
+  };
+
+  const hideDeleteDialog = () => {
+    setDialogVisible(false);
+    setSelectedRecordeId(null);
+  };
+
+  const confirmDelete = async () => {
+    if (selectedRecordeId !== null) {
+      await handleDelete(selectedRecordeId);
+      hideDeleteDialog();
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Cadastro de Recordes</Text>
- 
+
       <TextInput
         value={usuario}
         onChangeText={setUsuario}
-        placeholder="Usuario"
+        label="Usuário"
         style={styles.input}
+        activeOutlineColor="#22f059"
+        mode="outlined"
+        error={!!erros.usuario}
       />
+      {erros.usuario && <Text style={styles.errorText}>{erros.usuario}</Text>}
+
       <TextInput
         value={tempo}
         onChangeText={setTempo}
-        placeholder="Tempo"
+        label="Tempo"
         style={styles.input}
-       />
-       <TextInput
+        activeOutlineColor="#22f059"
+        mode="outlined"
+        keyboardType="numeric"
+        error={!!erros.tempo}
+      />
+      {erros.tempo && <Text style={styles.errorText}>{erros.tempo}</Text>}
+
+      <TextInput
         value={data}
         onChangeText={setDate}
-        placeholder="Data"
+        label="Data (DD/MM/AAAA)"
         style={styles.input}
-       />
-       <TextInput
+        activeOutlineColor="#22f059"
+        mode="outlined"
+        error={!!erros.data}
+      />
+      {erros.data && <Text style={styles.errorText}>{erros.data}</Text>}
+
+      <TextInput
         value={modalidae}
         onChangeText={setModalidade}
-        placeholder="modalidae"
+        label="Modalidade"
         style={styles.input}
-       />
- 
-      <Button
-        title={editingRecorde? 'Atualizar Recorde' : 'Adicionar Recorde'}
-        onPress={editingRecorde? handleUpdate : handleCreate}
-        color="#007AFF"
+        activeOutlineColor="#22f059"
+        mode="outlined"
+        error={!!erros.modalidae}
       />
- 
+      {erros.modalidae && <Text style={styles.errorText}>{erros.modalidae}</Text>}
+
+      <TouchableOpacity
+        onPress={editingRecorde ? handleUpdate : handleCreate}
+        style={styles.submitButton}
+      >
+        <Text style={styles.submitText}>
+          {editingRecorde ? 'Atualizar Recorde' : 'Adicionar Recorde'}
+        </Text>
+      </TouchableOpacity>
+
       <FlatList
         data={recorde}
         keyExtractor={(item) => item.id.toString()}
         style={{ marginTop: 20 }}
         renderItem={({ item }) => (
           <View style={styles.userItem}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.recordeNome}>{item.usuario}</Text>
-              <Text style={styles.recordeTempo}>{item.tempo}</Text>
-              <Text style={styles.recordeData}>{item.data}</Text>
-              <Text style={styles.recordeMadalidade}>{item.modalidae}</Text>
+            <View style={styles.gridRow}>
+              <Text style={styles.gridText}>{item.usuario}</Text>
+              <Text style={styles.gridText}>{item.tempo}</Text>
+              <TouchableOpacity onPress={() => handleCarregar(item)} style={styles.iconButton}>
+                <Icon name="edit" size={20} color="#007AFF" />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={() => handleCarregar(item)} style={styles.iconButton}>
-              <Icon name="edit" size={20} color="#007AFF" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.iconButton}>
-              <Icon name="trash-2" size={20} color="#FF3B30" />
-            </TouchableOpacity>
+            <View style={styles.gridRow}>
+              <Text style={styles.gridText}>{item.data}</Text>
+              <Text style={styles.gridText}>{item.modalidae}</Text>
+              <TouchableOpacity onPress={() => showDeleteDialog(item.id)} style={styles.iconButton}>
+                <Icon name="trash-2" size={20} color="#FF3B30" />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       />
+
+      {/* Diálogo de Confirmação */}
+      <Portal>
+        <Dialog visible={dialogVisible} onDismiss={hideDeleteDialog}>
+          <Dialog.Title>Confirmar Exclusão</Dialog.Title>
+          <Dialog.Content>
+            <Text>Tem certeza que deseja excluir este recorde?</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <PaperButton onPress={hideDeleteDialog}>Cancelar</PaperButton>
+            <PaperButton onPress={confirmDelete}>Excluir</PaperButton>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 }
- 
+
 const styles = StyleSheet.create({
   container: {
     padding: 20,
@@ -147,28 +235,47 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  userItem: {
-    flexDirection: 'row',
+  errorText: {
+    color: 'red',
+    marginBottom: 8,
+    fontSize: 13,
+    marginLeft: 4,
+  },
+  submitButton: {
+    backgroundColor: '#22f059',
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 10,
     alignItems: 'center',
-    backgroundColor: '#F9F9F9',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
-    borderColor: '#e0e0e0',
-    borderWidth: 1,
   },
-  userName: {
+  submitText: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  userEmail: {
-    color: '#555',
+  userItem: {
+    flex: 1,
+    marginTop: 10,
+    marginBottom: 5,
+    padding: 20,
+    borderColor: '#79747e',
+    paddingTop: 22,
+    borderWidth: 0.5,
+    borderRadius: 10,
+    fontWeight: 'bold',
+  },
+  gridText: {
+    width: '30%',
+    fontSize: 16,
+    color: 'black',
+  },
+  gridRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   iconButton: {
     padding: 6,

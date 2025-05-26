@@ -358,4 +358,5 @@ maskedInput: {
 focusedBorder: {
     borderColor: '#22f059',
 },
+
 });

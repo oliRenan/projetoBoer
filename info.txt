@@ -82,3 +82,30 @@ async function handleInsert() {
 
 
 
+import { useState } from "react";
+import { View } from "react-native";
+import { TextInput } from "react-native-paper"
+import { Text } from "react-native-web"
+import { Image } from 'react-native';
+
+export default function Tela(){
+
+  const [urlImagem, setUrlImagem] = useState('');
+    return(
+        <View>
+            <Text>Teste de texto</Text>
+            <TextInput
+                value={urlImagem}
+                onChangeText={setUrlImagem}
+                label="Coloque o url da imagem e veja ela ai embaixo"
+                activeOutlineColor="#22f059"
+                mode="outlined"
+            />
+            <Image 
+                source={ urlImagem } 
+                style={{ width: 200, height: 200 }}
+                resizeMode="cover" 
+            />
+        </View>
+    )
+}
