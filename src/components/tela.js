@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { TextInput, Portal, Dialog, Button as PaperButton } from 'react-native-paper';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/Feather';
-
 const API_URL = 'https://682b1681ab2b5004cb38ff96.mockapi.io/review';
 
 export default function Tela() {
@@ -11,7 +10,7 @@ export default function Tela() {
   const [nomeJogo, setJogo] = useState('');
   const [nota, setnota] = useState('');
   const [avaliacao, setAvaliacao] = useState('');
-  const [imagenurl, setImageUrl] = useState('');
+  const [imagem, setImageUrl] = useState('');
   const [editingReview, setEditing] = useState(null);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [selectedReviewId, setSelectReviewId] = useState(null);
@@ -24,39 +23,28 @@ export default function Tela() {
   const buscarReviews = async () => {
     try {
       const response = await axios.get(API_URL);
-      setReview(response.avaliacao);
+      setReview(response.data);
     } catch (error) {
       console.error('Erro ao buscar reviews', error);
       alert('Nenhum review foi registrado');
     }
   };
 
+  const validarCampos = () => {
+    const novosErros = {};
 
-const validarCampos = () => {
-  const novosErros = {};
+    if (!nomeJogo.trim()) novosErros.nomeJogo = 'Nome do jogo é obrigatório.';
+    if (!nota.trim()) {
+      novosErros.nota = 'Nota é obrigatória.';
+    } else if (!/^\d+$/.test(nota)) {
+      novosErros.nota = 'Nota deve conter apenas números.';
+    }
+    if (!avaliacao.trim()) novosErros.avaliacao = 'Avaliação é obrigatória.';
+    if (!imagem.trim()) novosErros.imagem = 'URL da imagem é obrigatória.';
 
-  if (!nomeJogo.trim()) {
-    novosErros.nomeJogo = 'Nome do jogo é obrigatório.';
-  }
-
-  if (!nota.trim()) {
-    novosErros.nota = 'Nota é obrigatória.';
-  } else if (!/^\d+$/.test(nota)) {
-    novosErros.nota = 'Nota deve conter apenas números.';
-  }
-
-  if (!avaliacao.trim()) {
-    novosErros.avaliacao = 'Avaliação é obrigatória.';
-        }
-
-  if (!imagenurl.trim()) {
-    novosErros.imagenurl = 'URL da imagem é obrigatória.';
-  }
-
-  setErros(novosErros);
-  return Object.keys(novosErros).length === 0;
-};
-
+    setErros(novosErros);
+    return Object.keys(novosErros).length === 0;
+  };
 
   const limparCampos = () => {
     setJogo('');
@@ -71,8 +59,8 @@ const validarCampos = () => {
     if (!validarCampos()) return;
 
     try {
-      const newRecorde = { nomeJogo, nota, avaliacao, imagenurl };
-      await axios.post(API_URL, newRecorde);
+      const newReview = { nomeJogo, nota, avaliacao, imagem };
+      await axios.post(API_URL, newReview);
       buscarReviews();
       limparCampos();
     } catch (error) {
@@ -84,7 +72,7 @@ const validarCampos = () => {
     setJogo(review.nomeJogo);
     setnota(review.nota);
     setAvaliacao(review.avaliacao);
-    setImageUrl(review.imagenurl);
+    setImageUrl(review.imagem);
     setEditing(review);
   };
 
@@ -92,8 +80,8 @@ const validarCampos = () => {
     if (!validarCampos()) return;
 
     try {
-      const updatedRecorde = { nomeJogo, nota, avaliacao, imagenurl };
-      await axios.put(`${API_URL}/${editingReview.id}`, updatedRecorde);
+      const updatedReview = { nomeJogo, nota, avaliacao, imagem };
+      await axios.put(`${API_URL}/${editingReview.id}`, updatedReview);
       buscarReviews();
       limparCampos();
     } catch (error) {
@@ -129,18 +117,19 @@ const validarCampos = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Cadastro de Recordes</Text>
+      <Text style={styles.title}>Cadastro de Reviews</Text>
 
       <TextInput
         value={nomeJogo}
         onChangeText={setJogo}
-        label="Nome jogo"
+        label="Nome do Jogo"
         style={styles.input}
         activeOutlineColor="#22f059"
         mode="outlined"
         error={!!erros.nomeJogo}
       />
-    {erros.nomeJogo && <Text style={styles.errorText}>{erros.nomeJogo}</Text>}
+      {erros.nomeJogo && <Text style={styles.errorText}>{erros.nomeJogo}</Text>}
+
       <TextInput
         value={nota}
         onChangeText={setnota}
@@ -151,27 +140,30 @@ const validarCampos = () => {
         keyboardType="numeric"
         error={!!erros.nota}
       />
-   {erros.nota && <Text style={styles.errorText}>{erros.nota}</Text>}
-            <TextInput
+      {erros.nota && <Text style={styles.errorText}>{erros.nota}</Text>}
+
+      <TextInput
         value={avaliacao}
         onChangeText={setAvaliacao}
-        label="Avaliacao"
+        label="Avaliação"
         style={styles.input}
         activeOutlineColor="#22f059"
         mode="outlined"
         error={!!erros.avaliacao}
       />
       {erros.avaliacao && <Text style={styles.errorText}>{erros.avaliacao}</Text>}
+
       <TextInput
-        value={imagenurl}
+        value={imagem}
         onChangeText={setImageUrl}
-        label="Insira a url da imagem"
+        label="URL da Imagem"
         style={styles.input}
         activeOutlineColor="#22f059"
         mode="outlined"
-        error={!!erros.imagenurl}
+        error={!!erros.imagem}
       />
-     {erros.imagenurl && <Text style={styles.errorText}>{erros.imagenurl}</Text>}
+      {erros.imagem && <Text style={styles.errorText}>{erros.imagem}</Text>}
+
       <TouchableOpacity
         onPress={editingReview ? handleUpdate : handleCreate}
         style={styles.submitButton}
@@ -182,7 +174,7 @@ const validarCampos = () => {
       </TouchableOpacity>
 
       <FlatList
-        review={review}
+        data={review}
         keyExtractor={(item) => item.id.toString()}
         style={{ marginTop: 20 }}
         renderItem={({ item }) => (
@@ -196,13 +188,11 @@ const validarCampos = () => {
             </View>
             <View style={styles.gridRow}>
               <Text style={styles.gridText}>{item.avaliacao}</Text>
-
-            <Image
-                source={ item.imagenurl} 
-                style={{ width: 200, height: 200 }}
-                resizeMode="cover" 
-            />
-              <Text style={styles.gridText}>{item.imagenurl}</Text>
+              <Image
+                source={{ uri: item.imagem }}
+                style={{ width: 100, height: 100, borderRadius: 10 }}
+                resizeMode="cover"
+              />
               <TouchableOpacity onPress={() => showDeleteDialog(item.id)} style={styles.iconButton}>
                 <Icon name="trash-2" size={20} color="#FF3B30" />
               </TouchableOpacity>
@@ -211,7 +201,6 @@ const validarCampos = () => {
         )}
       />
 
-      {/* Diálogo de Confirmação */}
       <Portal>
         <Dialog visible={dialogVisible} onDismiss={hideDeleteDialog}>
           <Dialog.Title>Confirmar Exclusão</Dialog.Title>
