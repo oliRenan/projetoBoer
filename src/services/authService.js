@@ -1,24 +1,30 @@
-import firebase from './connectionFirebase.js';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword 
+} from "firebase/auth";
+// Importa a instância 'auth' específica do nosso arquivo de conexão
+import { auth } from './connectionFirebase.js'; 
 
-export function authenticateUser(email, password, type){
+export function authenticateUser(email, password, type) {
     return new Promise((resolve, reject) => {
         if (type === 'login') {
-            firebase.auth().signInWithEmailAndPassword(email, password)
-                .then((user) => {
-                    console.log('Usuário autenticado na promisse:', user);
-                    resolve(user);
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // O usuário está em userCredential.user
+                    console.log('Usuário autenticado na promisse:', userCredential.user);
+                    resolve(userCredential); // Resolve com a credencial completa
                 })
                 .catch((err) => {
                     reject(err);
                 });
         } else {
-            firebase.auth().createUserWithEmailAndPassword(email, password)
-                .then((user) => {
-                    resolve(user);
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    resolve(userCredential);
                 })
                 .catch((err) => {
                     reject(err);
                 });
         }
     });
-} 
+}

@@ -1,36 +1,25 @@
 import { initializeApp } from "firebase/app";
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/auth'
-import 'firebase/compat/database';
+import { getAuth } from "firebase/auth";
+import { getDatabase } from "firebase/database";
+// import { getAnalytics } from "firebase/analytics"; // Opcional, se for usar
 
-
-// const firebaseConfig = {
-//   apiKey: "AIzaSyB_EJOBmswqCmJypMQMvrjWkeZU_NqF8MQ",
-//   authDomain: "projetomobileoficial.firebaseapp.com",
-//   projectId: "projetomobileoficial",
-//   storageBucket: "projetomobileoficial.firebasestorage.app",
-//   messagingSenderId: "298363989434",
-//   appId: "1:298363989434:web:21f06c363388a0028f8183"
-// };
-
+// Sua nova configuração do Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyARPcYKXEiAj-wyBxhtApl7V9bqbvDwypU",
-  authDomain: "projetomobile2-b356b.firebaseapp.com",
-  projectId: "projetomobile2-b356b",
-  storageBucket: "projetomobile2-b356b.firebasestorage.app",
-  messagingSenderId: "627327981156",
-  appId: "1:627327981156:web:f5e90a8a8ba8008c4ab171",
-  baseUrl : "https://projetomobile2-b356b-default-rtdb.firebaseio.com/"
+  apiKey: "AIzaSyCAAi0OvJ9iEfQZSyuz7gAV15RxfRqYjXI",
+  authDomain: "projetomobilenovo.firebaseapp.com",
+  projectId: "projetomobilenovo",
+  storageBucket: "projetomobilenovo.firebasestorage.app",
+  messagingSenderId: "686289480771",
+  appId: "1:686289480771:web:73b8c0d07d4369ea7078f6",
+  measurementId: "G-FKNV8KLENX"
 };
 
+// Inicializa o Firebase
+const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase
-if (!firebase.apps.length) { 
-    // Initialize Firebase 
-    firebase.initializeApp(firebaseConfig); 
-  }
-   
-  export default firebase
+// Inicializa os serviços que vamos usar e os exporta
+const auth = getAuth(app);
+const database = getDatabase(app); // Seu app usa o Realtime Database
+// const analytics = getAnalytics(app); // Descomente se for usar
 
-// const app = initializeApp(firebaseConfig);
-// //const auth = getAuth(app)
+export { app, auth, database };
