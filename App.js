@@ -4,20 +4,23 @@ import Menu from './src/components/menu';
 import Toast from 'react-native-toast-message';
 import { 
   Provider as PaperProvider, 
-  MD3DarkTheme,
-  adaptNavigationTheme 
+  MD3LightTheme, 
 } from 'react-native-paper';
-import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-const darkTheme = {
-  ...MD3DarkTheme,
+const lightTheme = {
+  ...MD3LightTheme,
   colors: {
-    ...MD3DarkTheme.colors,
-    primary: '#673ab7', 
-    accent: '#00BCD4',   
-    background: '#121212', 
-    surface: '#1E1E1E',   
+    ...MD3LightTheme.colors,
+    primary: '#D32F2F',     
+    accent: '#B22222',      
+    background: '#FFFFFF',  
+    surface: '#F9F9F9',     
+    text: '#212121',        
+    onSurface: '#212121',   
+    onSurfaceVariant: '#555555', 
+    outline: '#BDBDBD',     
+    error: '#D32F2F',       
+    onPrimary: '#FFFFFF',   
   },
 };
 
@@ -25,12 +28,12 @@ export default function App() {
   const [user, setUser] = useState('');
 
   return (
-    <PaperProvider theme={darkTheme}>
+    <PaperProvider theme={lightTheme}>
       <>
         {!user ? (
           <Login changeStatus={(user) => setUser(user)} />
         ) : (
-          <Menu setUser={setUser} theme={darkTheme} />
+          <Menu setUser={setUser} theme={lightTheme} />
         )}
         <Toast />
       </>

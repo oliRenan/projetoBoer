@@ -18,25 +18,19 @@ export default function HomeScreen({ setUser }) {
 
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-            
-            <Image 
-                style={styles.logo} 
-                source={require('../../../assets/logoo.png')} 
-            />
-
-            <Title style={styles.title}>Bem-vindo!</Title>
-            <Text variant="bodyLarge" style={styles.email}>
-                {user ? `Logado como: ${user.email}` : 'Não logado'}
+            <Title style={[styles.title, { color: colors.onBackground }]}>Olá!</Title>
+            <Text variant="bodyLarge" style={[styles.email, { color: colors.onSurfaceVariant }]}>
+                {user ? `Você está logado como: ${user.email}` : 'Não logado'}
             </Text>
             
             <Button
                 mode="contained"
                 onPress={handleLogout}
-                style={[styles.button, { backgroundColor: colors.accent }]} 
-                textColor={colors.background}
+                style={[styles.button, { backgroundColor: colors.primary }]} 
+                textColor={colors.onPrimary} 
                 icon="logout"
             >
-                Sair (Logout)
+                Sair
             </Button>
         </View>
     );
@@ -55,15 +49,21 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     title: {
+        fontSize: 30,
+        fontWeight: 'bold',
         marginBottom: 10,
     },
     email: {
-        fontSize: 16,
+        fontSize: 18,
         marginVertical: 20,
+        textAlign: 'center',
+        paddingHorizontal: 10, 
     },
     button: {
-        marginTop: 10,
-        width: '90%', 
-        borderRadius: 8,
+        marginTop: 20,
+        width: '80%', 
+        borderRadius: 10,
+        height: 50,
+        justifyContent: 'center',
     }
 });

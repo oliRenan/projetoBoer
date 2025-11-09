@@ -7,7 +7,7 @@ import {
     Text, 
     Portal, 
     Dialog,
-    useTheme 
+    useTheme // 1. Importar 'useTheme'
 } from 'react-native-paper';
 import { auth } from '../../services/connectionFirebase';
 import { 
@@ -19,6 +19,7 @@ import {
 import Toast from 'react-native-toast-message';
 
 export default function ProfileScreen({ setUser }) {
+    // 2. Pegar as cores do tema
     const { colors } = useTheme(); 
     const user = auth.currentUser;
     
@@ -27,13 +28,9 @@ export default function ProfileScreen({ setUser }) {
     const [loading, setLoading] = useState(false);
     const [dialogVisible, setDialogVisible] = useState(false);
 
+    // --- LÓGICA (NÃO MUDOU) ---
     const notify = (message, type = 'error') => {
-        Toast.show({
-            type: type,
-            text1: message,
-            position: 'bottom',
-            visibilityTime: 3000,
-        });
+        Toast.show({ type, text1: message, position: 'bottom', visibilityTime: 3000 });
     };
 
     const reauthenticate = async () => {
@@ -50,18 +47,15 @@ export default function ProfileScreen({ setUser }) {
             notify('Digite uma nova senha para alterar.');
             return;
         }
-
         const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{6,}$/;
         if (!passwordRegex.test(newPassword)) {
             notify('A senha deve ter letras, números e símbolos (mín. 6).');
             return;
         }
-        
         if (!currentPassword.trim()) {
             notify('Digite sua senha atual para confirmar a alteração.');
             return;
         }
-
         setLoading(true);
         try {
             await reauthenticate();
@@ -70,13 +64,9 @@ export default function ProfileScreen({ setUser }) {
             setNewPassword('');
             setCurrentPassword('');
         } catch (error) {
-            if (error.code === 'auth/wrong-password') {
-                notify('Senha atual incorreta.');
-            } else if (error.code === 'auth/requires-recent-login') {
-                 notify('Por favor, faça login novamente antes de tentar.');
-            } else {
-                notify('Erro ao atualizar senha.');
-            }
+            if (error.code === 'auth/wrong-password') notify('Senha atual incorreta.');
+            else if (error.code === 'auth/requires-recent-login') notify('Por favor, faça login novamente antes de tentar.');
+            else notify('Erro ao atualizar senha.');
         } finally {
             setLoading(false);
         }
@@ -101,33 +91,39 @@ export default function ProfileScreen({ setUser }) {
             notify('Conta excluída.', 'success');
             if (setUser) setUser(null); 
         } catch (error) {
-            if (error.code === 'auth/wrong-password') {
-                notify('Não foi possível excluir: Senha incorreta.');
-            } else {
-                notify('Erro ao excluir conta.');
-            }
+            if (error.code === 'auth/wrong-password') notify('Não foi possível excluir: Senha incorreta.');
+            else notify('Erro ao excluir conta.');
         } finally {
             setLoading(false);
         }
     };
+    // --- FIM DA LÓGICA ---
 
     if (!user) {
+        return (
+             <View style={[styles.container, { backgroundColor: colors.background }]}>
+                <Title>Erro</Title><Text>Usuário não encontrado.</Text>
+            </View>
+        );
     }
 
     return (
+        // 3. Aplicar cor de fundo (branca)
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <Title style={styles.title}>Meu Perfil</Title>
+            <Title style={[styles.title, { color: colors.onBackground }]}>Meu Perfil</Title>
             
-            <TextInput
-                label="E-mail (não editável)"
-                value={user.email}
-                style={styles.input} 
-                mode="outlined"
-                disabled={true}
-                left={<TextInput.Icon icon="email" />}
-            />
+            {/* <TextInput */}
+            {/*     label="E-mail (não editável)" */}
+            {/*     value={user.email} */}
+            {/*     style={styles.input} */}
+            {/*     mode="outlined" */}
+            {/*     disabled={true} */}
+            {/*     activeOutlineColor={colors.primary} // Vermelho */}
+            {/*     outlineColor={colors.outline} // Cinza */}
+            {/*     left={<TextInput.Icon icon="email" />} */}
+            {/* /> */}
             
-            <Text style={styles.sectionTitle}>Alterar Senha</Text>
+            <Text style={[styles.sectionTitle, { color: colors.onBackground }]}>Alterar Senha</Text>
             
             <TextInput
                 label="Nova Senha"
@@ -136,11 +132,12 @@ export default function ProfileScreen({ setUser }) {
                 style={styles.input}
                 mode="outlined"
                 secureTextEntry
-                activeOutlineColor={colors.primary} // Roxo
+                activeOutlineColor={colors.primary} // Vermelho
+                outlineColor={colors.outline}
                 left={<TextInput.Icon icon="lock-reset" />}
             />
 
-            <Text style={styles.warning}>
+            <Text style={[styles.warning, { color: colors.onSurfaceVariant }]}>
                 * Para salvar ou excluir, confirme sua senha atual abaixo.
             </Text>
 
@@ -151,7 +148,8 @@ export default function ProfileScreen({ setUser }) {
                 style={styles.input}
                 mode="outlined"
                 secureTextEntry
-                activeOutlineColor={colors.primary} // Roxo
+                activeOutlineColor={colors.primary} // Vermelho
+                outlineColor={colors.outline}
                 left={<TextInput.Icon icon="lock" />}
             />
 
@@ -160,28 +158,30 @@ export default function ProfileScreen({ setUser }) {
                 onPress={handleUpdatePassword}
                 loading={loading}
                 disabled={loading}
-                // 4. Usar a cor primária (ROXA) para o botão salvar
-                style={[styles.saveButton, { backgroundColor: colors.primary }]}
+                style={[styles.saveButton, { backgroundColor: colors.primary }]} // Vermelho
+                textColor={colors.onPrimary} // Branco
                 icon="content-save"
             >
                 Atualizar Senha
             </Button>
             
-            <View style={styles.divider} />
+            {/* 4. Divisor cinza claro */}
+            <View style={[styles.divider, { backgroundColor: colors.outline }]} />
 
             <Button
                 mode="outlined"
                 onPress={showDeleteDialog}
                 loading={loading}
                 disabled={loading}
-                textColor="red" 
-                style={styles.deleteButton}
+                textColor={colors.error} // Vermelho (do tema)
+                style={[styles.deleteButton, { borderColor: colors.error }]} // Borda vermelha
                 icon="delete-forever"
             >
                 Excluir Minha Conta
             </Button>
 
             <Portal>
+                {/* 5. O Dialog pegará o tema claro automaticamente */}
                 <Dialog visible={dialogVisible} onDismiss={hideDeleteDialog}>
                     <Dialog.Title>Confirmar Exclusão</Dialog.Title>
                     <Dialog.Content>
@@ -191,7 +191,7 @@ export default function ProfileScreen({ setUser }) {
                     </Dialog.Content>
                     <Dialog.Actions>
                         <Button onPress={hideDeleteDialog}>Cancelar</Button>
-                        <Button onPress={confirmDeleteProfile} textColor="red">Excluir</Button>
+                        <Button onPress={confirmDeleteProfile} textColor={colors.error}>Excluir</Button>
                     </Dialog.Actions>
                 </Dialog>
             </Portal>
@@ -203,38 +203,45 @@ export default function ProfileScreen({ setUser }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
+        padding: 24,
         justifyContent: 'center',
     },
     title: {
         textAlign: 'center',
-        marginBottom: 20,
+        marginBottom: 30,
+        fontSize: 28,
         fontWeight: 'bold',
     },
     sectionTitle: {
-        marginTop: 15,
-        marginBottom: 5,
+        marginTop: 20,
+        marginBottom: 10,
+        fontSize: 18,
         fontWeight: 'bold',
     },
     input: {
-        marginBottom: 12,
+        marginBottom: 15,
+        // O tema claro cuida do fundo do input
     },
     warning: {
-        fontSize: 12,
-        marginBottom: 5,
+        fontSize: 13,
+        marginBottom: 10,
         fontStyle: 'italic',
+        textAlign: 'center',
     },
     saveButton: {
-        marginTop: 10,
-        borderRadius: 8,
+        marginTop: 20,
+        borderRadius: 10,
+        height: 55,
+        justifyContent: 'center',
     },
     deleteButton: {
-        borderColor: 'red',
-        borderRadius: 8,
+        marginTop: 15,
+        borderRadius: 10,
+        height: 55,
+        justifyContent: 'center',
     },
     divider: {
         height: 1,
-        backgroundColor: '#444', 
-        marginVertical: 30,
+        marginVertical: 35,
     }
 });

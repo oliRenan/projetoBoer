@@ -1,26 +1,20 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from "react-native";
-import { Card, Text, TextInput, useTheme } from "react-native-paper";
+import { View, StyleSheet, Image, ActivityIndicator } from "react-native";
+import { Card, Text, TextInput, Button, useTheme } from "react-native-paper";
 import { authenticateUser } from '../services/authService.js';
 import Toast from 'react-native-toast-message';
 
 export default function Login({ changeStatus }) {
-    const { colors } = useTheme(); // 2. Pegar as cores do tema
+    const { colors } = useTheme(); 
     
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [type, setType] = useState('login');
     
-    const notify = (message) => {
-        Toast.show({
-            type: 'error', 
-            text1: message,
-            position: 'bottom',
-            visibilityTime: 2000,
-        });
+    const notify = (message, type = 'error') => {
+        Toast.show({ type, text1: message, position: 'bottom', visibilityTime: 3000 });
     };   
-
      function handleLogin() {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const passwordConditions = [
@@ -36,128 +30,126 @@ export default function Login({ changeStatus }) {
         for (const { regex, message } of  passwordConditions ){
             if (!regex.test(password)) return notify(message);
         }
-
-        setLoading(true)
+        setLoading(true);
         authenticateUser(email, password, type)
             .then((data) => {
                 changeStatus(data.user.uid);
-                Toast.show({
-                    type: 'success',
-                    text1: type === 'login' ? 'Login bem-sucedido!' : 'Cadastrado com sucesso',
-                    position: 'bottom',
-                    visibilityTime: 3000,
-                });
+                notify(type === 'login' ? 'Login bem-sucedido!' : 'Cadastrado com sucesso', 'success');
             })
             .catch((error) => {
-                Toast.show({
-                    type: 'error',
-                    text1: type === 'login' ? 'E-mail ou senha não cadastrados!' : 'Erro ao Cadastrar!',
-                    position: 'bottom',
-                    visibilityTime: 3000,
-                });
+                notify(type === 'login' ? 'E-mail ou senha inválidos.' : 'Erro ao Cadastrar: E-mail já em uso ou inválido.');
             })
             .finally(() => setLoading(false) );
     }
 
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <Image style={styles.logo} source={require("../../assets/logoo.png")} />
+            <View style={styles.header}>
+                <Text style={[styles.welcomeText, { color: colors.onBackground }]}>
+                    {type === "login" ? "Bem-vindo de volta!" : "Crie sua conta"}
+                </Text>
+            </View>
             
             <Card style={[styles.card, { backgroundColor: colors.surface }]}>
-                <Card.Title 
-                    title="BEM-VINDO" 
-                    titleStyle={{ color: colors.primary }} // Roxo
-                />
                 <Card.Content>
                     <TextInput
-                        style={styles.label}
+                        style={styles.input}
                         mode="outlined"
                         label="E-mail"
                         value={email}
-                        activeOutlineColor={colors.primary} // Roxo
+                        activeOutlineColor={colors.primary}
+                        outlineColor={colors.outline}
                         onChangeText={(text) => setEmail(text)}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
                     />
                     <TextInput
-                        style={styles.label}
+                        style={styles.input}
                         mode="outlined"
                         label="Senha"
                         secureTextEntry
                         maxLength={30}
                         value={password}
-                        activeOutlineColor={colors.primary} // Roxo
+                        activeOutlineColor={colors.primary}
+                        outlineColor={colors.outline}
                         onChangeText={(text) => setPassword(text)}
                     />
                 </Card.Content>
             </Card>
  
-            <TouchableOpacity
-                style={[
-                    styles.handleLogin,
-                    { backgroundColor: type === "login" ? colors.primary : colors.accent }, 
-                ]}
+            <Button
+                mode="contained"
                 onPress={handleLogin}
+                loading={loading}
                 disabled={loading}
+                style={[styles.mainButton, { backgroundColor: colors.primary }]}
+                labelStyle={styles.mainButtonText}
             >
-                <Text style={styles.loginText}>
-                    {type === "login" ? "Acessar" : "Cadastrar"}
-                </Text>
-            </TouchableOpacity>
+                {type === "login" ? "Entrar" : "Cadastrar"}
+            </Button>
  
-            {loading && <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />}
+            {loading && <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 20 }} />}
             
-            <TouchableOpacity
-                onPress={() =>
-                    setType((type) => (type === "login" ? "cadastrar" : "login"))
-                }
+            <Button
+                mode="text"
+                onPress={() => setType((type) => (type === "login" ? "cadastrar" : "login"))}
+                style={styles.toggleButton}
+                labelStyle={[styles.toggleButtonText, { color: colors.primary }]}
             >
-                <Text style={styles.toggleText}>
-                    {type === "login" ? "Criar uma conta" : "Já possuo uma conta"}
-                </Text>
-            </TouchableOpacity>
+                {type === "login" ? "Não tem uma conta? Cadastre-se!" : "Já tem uma conta? Faça login!"}
+            </Button>
         </View>
     );
 }
  
-// 6. Atualizar os Estilos
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: "center", 
-        textAlign: "center",
-        padding: 18,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 24,
+    },
+    header: {
+        marginBottom: 40,
+        alignItems: 'center',
     },
     logo: {
-        width: 150, 
-        height: 150,
-        justifyContent: "center",
-        alignSelf: "center",
-        marginBottom: 20, 
+        width: 100,
+        height: 100,
+        marginBottom: 15,
     },
-    label: {
-        marginBottom: 10,
-    },
-    loginText: {
-        color: "#FFFFFF",
-        fontSize: 18,
+    welcomeText: {
+        fontSize: 26,
         fontWeight: 'bold',
-    },
-    handleLogin: {
-        alignItems: "center",
-        justifyContent: "center",
-        height: 50,
-        marginTop: 20,
-        borderRadius : 8, 
-        width: '100%', 
+        textAlign: 'center',
     },
     card:{
-        borderRadius: 12, 
+        width: '100%',
+        borderRadius: 12,
         padding: 10,
+        elevation: 2, 
+        marginBottom: 20,
     },
-    toggleText: {
-        textAlign: "center", 
-        fontSize: 16, 
-        marginTop: 20,
+    input: {
+        marginBottom: 15,
+    },
+    mainButton: {
+        width: '100%',
+        height: 55,
+        justifyContent: 'center',
+        borderRadius: 10,
+        elevation: 2,
+    },
+    mainButtonText: {
+        fontSize: 18,
         fontWeight: 'bold',
-        color: '#00BCD4' 
+        color: '#FFFFFF',
+    },
+    toggleButton: {
+        marginTop: 25,
+    },
+    toggleButtonText: {
+        fontSize: 15,
+        fontWeight: '500',
     }
 });

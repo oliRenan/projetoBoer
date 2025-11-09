@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { NavigationContainer, DarkTheme } from '@react-navigation/native'; 
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native'; 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -11,9 +11,9 @@ const Tab = createBottomTabNavigator();
 export default function Menu({ setUser, theme }) {
 
     const navigationTheme = {
-        ...DarkTheme, 
+        ...DefaultTheme, 
         colors: {
-            ...DarkTheme.colors,
+            ...DefaultTheme.colors,
             primary: theme.colors.primary, 
             background: theme.colors.background, 
             card: theme.colors.surface, 
@@ -27,38 +27,24 @@ export default function Menu({ setUser, theme }) {
             <Tab.Navigator
                 screenOptions={({ route }) => ({
                     tabBarIcon: ({ color, size }) => {
-                        let iconName;
-                        switch (route.name) {
-                            case 'Home':
-                                iconName = 'home';
-                                break;
-                            case 'Perfil':
-                                iconName = 'user';
-                                break;
-                            default:
-                                iconName = 'bomb';
-                                break;
-                        }
+                        let iconName = route.name === 'Home' ? 'home' : 'user';
                         return <Icon name={iconName} size={size} color={color} />;
                     },
-                    tabBarActiveTintColor: theme.colors.accent, // Ciano
-                    tabBarInactiveTintColor: '#777',
+                    tabBarActiveTintColor: theme.colors.primary, 
+                    tabBarInactiveTintColor: '#888',
                     headerShown: false,
                     tabBarStyle: { 
-                        backgroundColor: theme.colors.surface, 
-                        borderTopColor: theme.colors.surface, 
+                        backgroundColor: theme.colors.surface,
+                        borderTopColor: theme.colors.outline, 
                     }
                 })}
             >
-                
                 <Tab.Screen name="Home">
                   {(props) => <HomeScreen {...props} setUser={setUser} />}
                 </Tab.Screen>
-                
                 <Tab.Screen name="Perfil">
                   {(props) => <ProfileScreen {...props} setUser={setUser} />}
                 </Tab.Screen>
-
             </Tab.Navigator>
         </NavigationContainer>
     );
