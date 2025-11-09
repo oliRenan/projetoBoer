@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DarkTheme } from '@react-navigation/native'; 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -8,9 +8,22 @@ import ProfileScreen from './screen/ProfileScreen.js';
 
 const Tab = createBottomTabNavigator();
 
-export default function Menu({ setUser }) { // Recebe 'setUser'
+export default function Menu({ setUser, theme }) {
+
+    const navigationTheme = {
+        ...DarkTheme, 
+        colors: {
+            ...DarkTheme.colors,
+            primary: theme.colors.primary, 
+            background: theme.colors.background, 
+            card: theme.colors.surface, 
+            text: theme.colors.text,
+            notification: theme.colors.primary,
+        },
+    };
+
     return (
-        <NavigationContainer>
+        <NavigationContainer theme={navigationTheme}>
             <Tab.Navigator
                 screenOptions={({ route }) => ({
                     tabBarIcon: ({ color, size }) => {
@@ -28,9 +41,13 @@ export default function Menu({ setUser }) { // Recebe 'setUser'
                         }
                         return <Icon name={iconName} size={size} color={color} />;
                     },
-                    tabBarActiveTintColor: '#22f059',
+                    tabBarActiveTintColor: theme.colors.accent, // Ciano
                     tabBarInactiveTintColor: '#777',
                     headerShown: false,
+                    tabBarStyle: { 
+                        backgroundColor: theme.colors.surface, 
+                        borderTopColor: theme.colors.surface, 
+                    }
                 })}
             >
                 
@@ -38,7 +55,6 @@ export default function Menu({ setUser }) { // Recebe 'setUser'
                   {(props) => <HomeScreen {...props} setUser={setUser} />}
                 </Tab.Screen>
                 
-                {/* CORREÇÃO AQUI: Passar setUser para o ProfileScreen também */}
                 <Tab.Screen name="Perfil">
                   {(props) => <ProfileScreen {...props} setUser={setUser} />}
                 </Tab.Screen>

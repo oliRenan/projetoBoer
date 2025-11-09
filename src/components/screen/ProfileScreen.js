@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-// 1. Importar Portal e Dialog
 import { 
     TextInput, 
     Button, 
     Title, 
     Text, 
     Portal, 
-    Dialog 
+    Dialog,
+    useTheme 
 } from 'react-native-paper';
 import { auth } from '../../services/connectionFirebase';
 import { 
@@ -19,13 +19,12 @@ import {
 import Toast from 'react-native-toast-message';
 
 export default function ProfileScreen({ setUser }) {
+    const { colors } = useTheme(); 
     const user = auth.currentUser;
     
     const [newPassword, setNewPassword] = useState('');
     const [currentPassword, setCurrentPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    
-    // 2. Estado para controlar a visibilidade do Dialog
     const [dialogVisible, setDialogVisible] = useState(false);
 
     const notify = (message, type = 'error') => {
@@ -36,15 +35,6 @@ export default function ProfileScreen({ setUser }) {
             visibilityTime: 3000,
         });
     };
-
-    if (!user) {
-        return (
-            <View style={styles.container}>
-                <Title>Erro</Title>
-                <Text>Usuário não encontrado.</Text>
-            </View>
-        );
-    }
 
     const reauthenticate = async () => {
         if (!currentPassword) {
@@ -86,14 +76,12 @@ export default function ProfileScreen({ setUser }) {
                  notify('Por favor, faça login novamente antes de tentar.');
             } else {
                 notify('Erro ao atualizar senha.');
-                console.error(error);
             }
         } finally {
             setLoading(false);
         }
     };
 
-    // 3. Função para *mostrar* o diálogo de confirmação
     const showDeleteDialog = () => {
         if (!currentPassword) {
             notify('Digite sua senha atual para excluir a conta.');
@@ -102,39 +90,38 @@ export default function ProfileScreen({ setUser }) {
         setDialogVisible(true);
     };
 
-    // Função para esconder o diálogo
     const hideDeleteDialog = () => setDialogVisible(false);
 
-    // 4. Lógica de exclusão (separada)
     const confirmDeleteProfile = async () => {
-        hideDeleteDialog(); // Fecha o diálogo primeiro
+        hideDeleteDialog();
         setLoading(true);
         try {
             await reauthenticate();
             await deleteUser(user);
             notify('Conta excluída.', 'success');
-            if (setUser) setUser(null); // Desloga o usuário
+            if (setUser) setUser(null); 
         } catch (error) {
             if (error.code === 'auth/wrong-password') {
                 notify('Não foi possível excluir: Senha incorreta.');
             } else {
                 notify('Erro ao excluir conta.');
-                console.error(error);
             }
         } finally {
             setLoading(false);
         }
     };
 
+    if (!user) {
+    }
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <Title style={styles.title}>Meu Perfil</Title>
             
             <TextInput
                 label="E-mail (não editável)"
                 value={user.email}
-                style={styles.input}
+                style={styles.input} 
                 mode="outlined"
                 disabled={true}
                 left={<TextInput.Icon icon="email" />}
@@ -149,12 +136,12 @@ export default function ProfileScreen({ setUser }) {
                 style={styles.input}
                 mode="outlined"
                 secureTextEntry
-                activeOutlineColor="#22f059"
+                activeOutlineColor={colors.primary} // Roxo
                 left={<TextInput.Icon icon="lock-reset" />}
             />
 
             <Text style={styles.warning}>
-                * Para salvar alterações ou excluir, confirme sua senha atual abaixo.
+                * Para salvar ou excluir, confirme sua senha atual abaixo.
             </Text>
 
             <TextInput
@@ -164,7 +151,7 @@ export default function ProfileScreen({ setUser }) {
                 style={styles.input}
                 mode="outlined"
                 secureTextEntry
-                activeOutlineColor="#22f059"
+                activeOutlineColor={colors.primary} // Roxo
                 left={<TextInput.Icon icon="lock" />}
             />
 
@@ -173,7 +160,8 @@ export default function ProfileScreen({ setUser }) {
                 onPress={handleUpdatePassword}
                 loading={loading}
                 disabled={loading}
-                style={styles.saveButton}
+                // 4. Usar a cor primária (ROXA) para o botão salvar
+                style={[styles.saveButton, { backgroundColor: colors.primary }]}
                 icon="content-save"
             >
                 Atualizar Senha
@@ -181,20 +169,18 @@ export default function ProfileScreen({ setUser }) {
             
             <View style={styles.divider} />
 
-            {/* 5. O botão agora chama 'showDeleteDialog' */}
             <Button
                 mode="outlined"
-                onPress={showDeleteDialog} 
+                onPress={showDeleteDialog}
                 loading={loading}
                 disabled={loading}
-                textColor="red"
+                textColor="red" 
                 style={styles.deleteButton}
                 icon="delete-forever"
             >
                 Excluir Minha Conta
             </Button>
 
-            {/* 6. Adicionar o Portal e o Dialog no final do JSX */}
             <Portal>
                 <Dialog visible={dialogVisible} onDismiss={hideDeleteDialog}>
                     <Dialog.Title>Confirmar Exclusão</Dialog.Title>
@@ -214,46 +200,41 @@ export default function ProfileScreen({ setUser }) {
     );
 }
 
-// (Os estilos são os mesmos da etapa anterior)
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#fff',
         justifyContent: 'center',
     },
     title: {
         textAlign: 'center',
         marginBottom: 20,
         fontWeight: 'bold',
-        color: '#333',
     },
     sectionTitle: {
         marginTop: 15,
         marginBottom: 5,
         fontWeight: 'bold',
-        color: '#555',
     },
     input: {
         marginBottom: 12,
-        backgroundColor: '#fff',
     },
     warning: {
         fontSize: 12,
-        color: '#666',
         marginBottom: 5,
         fontStyle: 'italic',
     },
     saveButton: {
         marginTop: 10,
-        backgroundColor: '#22f059',
+        borderRadius: 8,
     },
     deleteButton: {
         borderColor: 'red',
+        borderRadius: 8,
     },
     divider: {
         height: 1,
-        backgroundColor: '#eee',
+        backgroundColor: '#444', 
         marginVertical: 30,
     }
 });

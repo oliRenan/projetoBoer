@@ -1,16 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Button, Title, Paragraph } from 'react-native-paper';
+import { View, StyleSheet, Image } from 'react-native';
+import { Button, Title, Text, useTheme } from 'react-native-paper';
 import { signOut } from 'firebase/auth';
-import { auth } from '../../services/connectionFirebase'; // Importar 'auth'
+import { auth } from '../../services/connectionFirebase';
 
-// Recebemos a prop 'setUser' que veio do App.js -> Menu.js
 export default function HomeScreen({ setUser }) {
-    const user = auth.currentUser; // Pegar o usuário logado atualmente
+    const { colors } = useTheme();
+    const user = auth.currentUser; 
 
     const handleLogout = () => {
         signOut(auth).then(() => {
-            // Ao deslogar do Firebase, limpamos o estado no App.js
             setUser(''); 
         }).catch((error) => {
             console.error("Erro ao fazer logout: ", error);
@@ -18,15 +17,23 @@ export default function HomeScreen({ setUser }) {
     };
 
     return (
-        <View style={styles.container}>
-            <Title>Bem-vindo!</Title>
-            <Paragraph style={styles.email}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+            
+            <Image 
+                style={styles.logo} 
+                source={require('../../../assets/logoo.png')} 
+            />
+
+            <Title style={styles.title}>Bem-vindo!</Title>
+            <Text variant="bodyLarge" style={styles.email}>
                 {user ? `Logado como: ${user.email}` : 'Não logado'}
-            </Paragraph>
+            </Text>
+            
             <Button
                 mode="contained"
                 onPress={handleLogout}
-                style={styles.button}
+                style={[styles.button, { backgroundColor: colors.accent }]} 
+                textColor={colors.background}
                 icon="logout"
             >
                 Sair (Logout)
@@ -41,7 +48,14 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: '#fff'
+    },
+    logo: {
+        width: 120,
+        height: 120,
+        marginBottom: 30,
+    },
+    title: {
+        marginBottom: 10,
     },
     email: {
         fontSize: 16,
@@ -49,6 +63,7 @@ const styles = StyleSheet.create({
     },
     button: {
         marginTop: 10,
-        width: '80%',
+        width: '90%', 
+        borderRadius: 8,
     }
 });
