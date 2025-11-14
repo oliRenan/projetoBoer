@@ -14,7 +14,8 @@ import {
     updatePassword, 
     deleteUser, 
     reauthenticateWithCredential, 
-    EmailAuthProvider 
+    EmailAuthProvider,
+    signOut // <-- 1. IMPORTAR O signOut
 } from 'firebase/auth';
 import Toast from 'react-native-toast-message';
 
@@ -26,6 +27,7 @@ export default function ProfileScreen({ setUser }) {
     const [currentPassword, setCurrentPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [dialogVisible, setDialogVisible] = useState(false);
+    const [loadingLogout, setLoadingLogout] = useState(false); // <-- 2. ESTADO DE LOADING P/ LOGOUT
 
     const notify = (message, type = 'error') => {
         Toast.show({
@@ -33,6 +35,18 @@ export default function ProfileScreen({ setUser }) {
             text1: message,
             position: 'bottom',
             visibilityTime: 3000,
+        });
+    };
+
+    // <-- 3. ADICIONAR A FUNÇÃO handleLogout
+    const handleLogout = () => {
+        setLoadingLogout(true);
+        signOut(auth).then(() => {
+            if (setUser) setUser(''); 
+        }).catch((error) => {
+            console.error("Erro ao fazer logout: ", error);
+            notify('Erro ao tentar sair da conta.', 'error');
+            setLoadingLogout(false);
         });
     };
 
@@ -46,22 +60,20 @@ export default function ProfileScreen({ setUser }) {
     };
 
     const handleUpdatePassword = async () => {
+        // ... (código existente)
         if (!newPassword.trim()) {
             notify('Digite uma nova senha para alterar.');
             return;
         }
-
         const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{6,}$/;
         if (!passwordRegex.test(newPassword)) {
             notify('A senha deve ter letras, números e símbolos (mín. 6).');
             return;
         }
-        
         if (!currentPassword.trim()) {
             notify('Digite sua senha atual para confirmar a alteração.');
             return;
         }
-
         setLoading(true);
         try {
             await reauthenticate();
@@ -83,6 +95,7 @@ export default function ProfileScreen({ setUser }) {
     };
 
     const showDeleteDialog = () => {
+        // ... (código existente)
         if (!currentPassword) {
             notify('Digite sua senha atual para excluir a conta.');
             return;
@@ -93,6 +106,7 @@ export default function ProfileScreen({ setUser }) {
     const hideDeleteDialog = () => setDialogVisible(false);
 
     const confirmDeleteProfile = async () => {
+        // ... (código existente)
         hideDeleteDialog();
         setLoading(true);
         try {
@@ -112,6 +126,7 @@ export default function ProfileScreen({ setUser }) {
     };
 
     if (!user) {
+        return null; 
     }
 
     return (
@@ -132,11 +147,11 @@ export default function ProfileScreen({ setUser }) {
             <TextInput
                 label="Nova Senha"
                 value={newPassword}
-                onChangeText={setNewPassword}
+                // ... (props existentes)
                 style={styles.input}
                 mode="outlined"
                 secureTextEntry
-                activeOutlineColor={colors.primary} // Roxo
+                activeOutlineColor={colors.primary}
                 left={<TextInput.Icon icon="lock-reset" />}
             />
 
@@ -147,11 +162,11 @@ export default function ProfileScreen({ setUser }) {
             <TextInput
                 label="Senha Atual (Obrigatório)"
                 value={currentPassword}
-                onChangeText={setCurrentPassword}
+                // ... (props existentes)
                 style={styles.input}
                 mode="outlined"
                 secureTextEntry
-                activeOutlineColor={colors.primary} // Roxo
+                activeOutlineColor={colors.primary}
                 left={<TextInput.Icon icon="lock" />}
             />
 
@@ -159,12 +174,24 @@ export default function ProfileScreen({ setUser }) {
                 mode="contained"
                 onPress={handleUpdatePassword}
                 loading={loading}
-                disabled={loading}
-                // 4. Usar a cor primária (ROXA) para o botão salvar
+                disabled={loading || loadingLogout} // <-- 4. DESABILITAR COM OS DOIS LOADINGS
                 style={[styles.saveButton, { backgroundColor: colors.primary }]}
                 icon="content-save"
             >
                 Atualizar Senha
+            </Button>
+
+            {/* // <-- 4. ESTE É O BOTÃO DE LOGOUT */}
+            <Button
+                mode="contained"
+                onPress={handleLogout}
+                loading={loadingLogout}
+                disabled={loading || loadingLogout}
+                style={[styles.logoutButton, { backgroundColor: colors.accent }]} 
+                textColor={colors.background}
+                icon="logout"
+            >
+                Sair (Logout)
             </Button>
             
             <View style={styles.divider} />
@@ -173,7 +200,7 @@ export default function ProfileScreen({ setUser }) {
                 mode="outlined"
                 onPress={showDeleteDialog}
                 loading={loading}
-                disabled={loading}
+                disabled={loading || loadingLogout} // <-- 4. DESABILITAR COM OS DOIS LOADINGS
                 textColor="red" 
                 style={styles.deleteButton}
                 icon="delete-forever"
@@ -183,16 +210,7 @@ export default function ProfileScreen({ setUser }) {
 
             <Portal>
                 <Dialog visible={dialogVisible} onDismiss={hideDeleteDialog}>
-                    <Dialog.Title>Confirmar Exclusão</Dialog.Title>
-                    <Dialog.Content>
-                        <Text variant="bodyMedium">
-                            Esta ação é irreversível. Você tem certeza que deseja excluir permanentemente sua conta?
-                        </Text>
-                    </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button onPress={hideDeleteDialog}>Cancelar</Button>
-                        <Button onPress={confirmDeleteProfile} textColor="red">Excluir</Button>
-                    </Dialog.Actions>
+                    {/* ... (código do dialog existente) ... */}
                 </Dialog>
             </Portal>
 
@@ -200,6 +218,7 @@ export default function ProfileScreen({ setUser }) {
     );
 }
 
+// 5. ADICIONAR O ESTILO PARA 'logoutButton'
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -226,6 +245,10 @@ const styles = StyleSheet.create({
     },
     saveButton: {
         marginTop: 10,
+        borderRadius: 8,
+    },
+    logoutButton: { // <-- 5. ESTILO ADICIONADO
+        marginTop: 15,
         borderRadius: 8,
     },
     deleteButton: {
