@@ -7,19 +7,19 @@ import {
     Text, 
     Portal, 
     Dialog,
-    useTheme // 1. Importar 'useTheme'
+    useTheme 
 } from 'react-native-paper';
 import { auth } from '../../services/connectionFirebase';
 import { 
     updatePassword, 
     deleteUser, 
     reauthenticateWithCredential, 
-    EmailAuthProvider 
+    EmailAuthProvider,
+    signOut // 1. IMPORTAR signOut
 } from 'firebase/auth';
 import Toast from 'react-native-toast-message';
 
-export default function ProfileScreen({ setUser }) {
-    // 2. Pegar as cores do tema
+export default function ProfileScreen({ setUser }) { //
     const { colors } = useTheme(); 
     const user = auth.currentUser;
     
@@ -27,10 +27,23 @@ export default function ProfileScreen({ setUser }) {
     const [currentPassword, setCurrentPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [dialogVisible, setDialogVisible] = useState(false);
+    const [loadingLogout, setLoadingLogout] = useState(false); // 2. Estado de loading para Logout
 
-    // --- LÓGICA (NÃO MUDOU) ---
+    // --- LÓGICA (Notify, Reauthenticate, etc.) ---
     const notify = (message, type = 'error') => {
         Toast.show({ type, text1: message, position: 'bottom', visibilityTime: 3000 });
+    };
+
+    // 3. ADICIONAR FUNÇÃO DE LOGOUT
+    const handleLogout = () => {
+        setLoadingLogout(true);
+        signOut(auth).then(() => {
+            if (setUser) setUser(''); 
+        }).catch((error) => {
+            console.error("Erro ao fazer logout: ", error);
+            notify('Erro ao tentar sair da conta.', 'error');
+            setLoadingLogout(false);
+        });
     };
 
     const reauthenticate = async () => {
@@ -43,6 +56,7 @@ export default function ProfileScreen({ setUser }) {
     };
 
     const handleUpdatePassword = async () => {
+        // ... (código existente sem alteração) ...
         if (!newPassword.trim()) {
             notify('Digite uma nova senha para alterar.');
             return;
@@ -73,6 +87,7 @@ export default function ProfileScreen({ setUser }) {
     };
 
     const showDeleteDialog = () => {
+        // ... (código existente sem alteração) ...
         if (!currentPassword) {
             notify('Digite sua senha atual para excluir a conta.');
             return;
@@ -83,6 +98,7 @@ export default function ProfileScreen({ setUser }) {
     const hideDeleteDialog = () => setDialogVisible(false);
 
     const confirmDeleteProfile = async () => {
+        // ... (código existente sem alteração) ...
         hideDeleteDialog();
         setLoading(true);
         try {
@@ -100,28 +116,14 @@ export default function ProfileScreen({ setUser }) {
     // --- FIM DA LÓGICA ---
 
     if (!user) {
-        return (
-             <View style={[styles.container, { backgroundColor: colors.background }]}>
-                <Title>Erro</Title><Text>Usuário não encontrado.</Text>
-            </View>
-        );
+         return null; // Retorna nulo se o usuário deslogar
     }
 
     return (
-        // 3. Aplicar cor de fundo (branca)
         <View style={[styles.container, { backgroundColor: colors.background }]}>
             <Title style={[styles.title, { color: colors.onBackground }]}>Meu Perfil</Title>
             
-            {/* <TextInput */}
-            {/*     label="E-mail (não editável)" */}
-            {/*     value={user.email} */}
-            {/*     style={styles.input} */}
-            {/*     mode="outlined" */}
-            {/*     disabled={true} */}
-            {/*     activeOutlineColor={colors.primary} // Vermelho */}
-            {/*     outlineColor={colors.outline} // Cinza */}
-            {/*     left={<TextInput.Icon icon="email" />} */}
-            {/* /> */}
+            {/* Removi o e-mail para um visual mais limpo, mas você pode descomentar se quiser */}
             
             <Text style={[styles.sectionTitle, { color: colors.onBackground }]}>Alterar Senha</Text>
             
@@ -132,7 +134,7 @@ export default function ProfileScreen({ setUser }) {
                 style={styles.input}
                 mode="outlined"
                 secureTextEntry
-                activeOutlineColor={colors.primary} // Vermelho
+                activeOutlineColor={colors.primary}
                 outlineColor={colors.outline}
                 left={<TextInput.Icon icon="lock-reset" />}
             />
@@ -148,7 +150,7 @@ export default function ProfileScreen({ setUser }) {
                 style={styles.input}
                 mode="outlined"
                 secureTextEntry
-                activeOutlineColor={colors.primary} // Vermelho
+                activeOutlineColor={colors.primary}
                 outlineColor={colors.outline}
                 left={<TextInput.Icon icon="lock" />}
             />
@@ -157,32 +159,43 @@ export default function ProfileScreen({ setUser }) {
                 mode="contained"
                 onPress={handleUpdatePassword}
                 loading={loading}
-                disabled={loading}
-                style={[styles.saveButton, { backgroundColor: colors.primary }]} // Vermelho
-                textColor={colors.onPrimary} // Branco
+                disabled={loading || loadingLogout} // 4. Atualizar disabled
+                style={[styles.saveButton, { backgroundColor: colors.primary }]}
+                textColor={colors.onPrimary}
                 icon="content-save"
             >
                 Atualizar Senha
             </Button>
             
-            {/* 4. Divisor cinza claro */}
+            {/* 5. BOTÃO DE LOGOUT ADICIONADO AQUI */}
+            <Button
+                mode="contained"
+                onPress={handleLogout}
+                loading={loadingLogout}
+                disabled={loading || loadingLogout}
+                style={[styles.logoutButton, { backgroundColor: colors.accent }]} // Cor de destaque
+                textColor={colors.onPrimary} 
+                icon="logout"
+            >
+                Sair (Logout)
+            </Button>
+
             <View style={[styles.divider, { backgroundColor: colors.outline }]} />
 
             <Button
                 mode="outlined"
                 onPress={showDeleteDialog}
                 loading={loading}
-                disabled={loading}
-                textColor={colors.error} // Vermelho (do tema)
-                style={[styles.deleteButton, { borderColor: colors.error }]} // Borda vermelha
+                disabled={loading || loadingLogout} // 4. Atualizar disabled
+                textColor={colors.error}
+                style={[styles.deleteButton, { borderColor: colors.error }]}
                 icon="delete-forever"
             >
                 Excluir Minha Conta
             </Button>
 
             <Portal>
-                {/* 5. O Dialog pegará o tema claro automaticamente */}
-                <Dialog visible={dialogVisible} onDismiss={hideDeleteDialog}>
+                <Dialog visible={dialogVisible} onDismiss={hideDeleteDialog} style={{backgroundColor: colors.surface}}>
                     <Dialog.Title>Confirmar Exclusão</Dialog.Title>
                     <Dialog.Content>
                         <Text variant="bodyMedium">
@@ -190,7 +203,7 @@ export default function ProfileScreen({ setUser }) {
                         </Text>
                     </Dialog.Content>
                     <Dialog.Actions>
-                        <Button onPress={hideDeleteDialog}>Cancelar</Button>
+                        <Button onPress={hideDeleteDialog} textColor={colors.onSurfaceVariant}>Cancelar</Button>
                         <Button onPress={confirmDeleteProfile} textColor={colors.error}>Excluir</Button>
                     </Dialog.Actions>
                 </Dialog>
@@ -220,7 +233,6 @@ const styles = StyleSheet.create({
     },
     input: {
         marginBottom: 15,
-        // O tema claro cuida do fundo do input
     },
     warning: {
         fontSize: 13,
@@ -230,6 +242,13 @@ const styles = StyleSheet.create({
     },
     saveButton: {
         marginTop: 20,
+        borderRadius: 10,
+        height: 55,
+        justifyContent: 'center',
+    },
+    // 6. ESTILO PARA O BOTÃO DE LOGOUT
+    logoutButton: {
+        marginTop: 15,
         borderRadius: 10,
         height: 55,
         justifyContent: 'center',
