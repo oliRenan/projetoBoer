@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { 
     TextInput, 
@@ -9,32 +9,103 @@ import {
     Dialog,
     useTheme 
 } from 'react-native-paper';
-import { auth } from '../../services/connectionFirebase';
+// 1. O 'database' é importado
+import { auth, database } from '../../services/connectionFirebase'; 
 import { 
     updatePassword, 
     deleteUser, 
     reauthenticateWithCredential, 
     EmailAuthProvider,
-    signOut // 1. IMPORTAR signOut
+    signOut
 } from 'firebase/auth';
+// 2. As funções do Realtime Database são importadas
+import { ref, onValue, update } from "firebase/database"; 
 import Toast from 'react-native-toast-message';
 
-export default function ProfileScreen({ setUser }) { //
+// NENHUMA biblioteca de máscara é importada
+
+export default function ProfileScreen({ setUser }) {
     const { colors } = useTheme(); 
     const user = auth.currentUser;
     
+    // Estados para Senha e Ações
     const [newPassword, setNewPassword] = useState('');
     const [currentPassword, setCurrentPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [dialogVisible, setDialogVisible] = useState(false);
-    const [loadingLogout, setLoadingLogout] = useState(false); // 2. Estado de loading para Logout
+    const [loadingLogout, setLoadingLogout] = useState(false);
 
-    // --- LÓGICA (Notify, Reauthenticate, etc.) ---
-    const notify = (message, type = 'error') => {
-        Toast.show({ type, text1: message, position: 'bottom', visibilityTime: 3000 });
+    // Estados para o Perfil
+    const [endereco, setEndereco] = useState('');
+    // 3. DOIS estados para o telefone:
+    const [telefone, setTelefone] = useState(''); // Guarda o valor LIMPO (só números)
+    const [telefoneDisplay, setTelefoneDisplay] = useState(''); // Guarda o valor MASCARADO para exibir
+    const [loadingProfile, setLoadingProfile] = useState(false);
+
+    // 4. FUNÇÃO MANUAL para aplicar a máscara
+    const maskTelefone = (value) => {
+        if (!value) return '';
+        // Remove tudo que não é dígito e limita a 11
+        let v = value.replace(/\D/g, '').substring(0, 11);
+
+        // Aplica a máscara progressivamente
+        if (v.length > 10) {
+            // (00) 00000-0000
+            v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+        } else if (v.length > 5) {
+            // (00) 00000-
+            v = v.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, '($1) $2-$3');
+        } else if (v.length > 2) {
+            // (00) 00000
+            v = v.replace(/^(\d{2})(\d{0,5}).*/, '($1) $2');
+        } else if (v.length > 0) {
+            // (00
+            v = v.replace(/^(\d{0,2}).*/, '($1');
+        }
+        
+        return v;
     };
 
-    // 3. ADICIONAR FUNÇÃO DE LOGOUT
+    // useEffect para carregar os dados do perfil
+    useEffect(() => {
+        if (user) {
+            const userProfileRef = ref(database, `usuarios/${user.uid}`);
+            
+            const unsubscribe = onValue(userProfileRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    setEndereco(data.endereco || '');
+                    // 5. Atualiza os dois estados quando os dados chegam
+                    setTelefone(data.telefone || ''); 
+                    setTelefoneDisplay(maskTelefone(data.telefone || ''));
+                }
+            });
+
+            return () => unsubscribe();
+        }
+    }, [user]); 
+
+    // 6. Handler customizado para o TextInput do telefone
+    const handleTelefoneChange = (textFromInput) => {
+        const unmasked = textFromInput.replace(/\D/g, ''); // Limpa o texto
+        
+        // Limita o texto limpo a 11 dígitos
+        if (unmasked.length <= 11) {
+            setTelefone(unmasked); // Salva o valor limpo
+            setTelefoneDisplay(maskTelefone(unmasked)); // Salva o valor mascarado para exibição
+        }
+    };
+
+
+    const notify = (message, type = 'error') => {
+        Toast.show({
+            type: type,
+            text1: message,
+            position: 'bottom',
+            visibilityTime: 3000,
+        });
+    };
+    
     const handleLogout = () => {
         setLoadingLogout(true);
         signOut(auth).then(() => {
@@ -46,6 +117,42 @@ export default function ProfileScreen({ setUser }) { //
         });
     };
 
+    // Função para salvar Endereço e Telefone
+    const handleSaveProfile = async () => {
+        if (!user) return;
+
+        // Validação usa o 'telefone' (valor limpo)
+        if (!endereco.trim() || !telefone.trim()) {
+            notify('Por favor, preencha o endereço e o telefone.', 'error');
+            return;
+        }
+
+        // Valida se o telefone (limpo) tem 11 dígitos
+        if (telefone.length !== 11) {
+             notify('Por favor, digite um telefone válido com 11 dígitos.', 'error');
+            return;
+        }
+
+        setLoadingProfile(true);
+        const userProfileRef = ref(database, `usuarios/${user.uid}`);
+
+        try {
+            // Salva o valor 'telefone' (limpo, sem máscara)
+            await update(userProfileRef, {
+                endereco: endereco,
+                telefone: telefone 
+            });
+            notify('Perfil atualizado com sucesso!', 'success');
+        } catch (error) {
+            console.error("Erro ao salvar perfil: ", error);
+            notify('Erro ao salvar o perfil.', 'error');
+        } finally {
+            setLoadingProfile(false);
+        }
+    };
+
+    // --- Funções de Autenticação (Senha e Exclusão) ---
+
     const reauthenticate = async () => {
         if (!currentPassword) {
             notify('Digite sua senha atual para confirmar.');
@@ -56,7 +163,6 @@ export default function ProfileScreen({ setUser }) { //
     };
 
     const handleUpdatePassword = async () => {
-        // ... (código existente sem alteração) ...
         if (!newPassword.trim()) {
             notify('Digite uma nova senha para alterar.');
             return;
@@ -78,16 +184,19 @@ export default function ProfileScreen({ setUser }) { //
             setNewPassword('');
             setCurrentPassword('');
         } catch (error) {
-            if (error.code === 'auth/wrong-password') notify('Senha atual incorreta.');
-            else if (error.code === 'auth/requires-recent-login') notify('Por favor, faça login novamente antes de tentar.');
-            else notify('Erro ao atualizar senha.');
+            if (error.code === 'auth/wrong-password') {
+                notify('Senha atual incorreta.');
+            } else if (error.code === 'auth/requires-recent-login') {
+                 notify('Por favor, faça login novamente antes de tentar.');
+            } else {
+                notify('Erro ao atualizar senha.');
+            }
         } finally {
             setLoading(false);
         }
     };
 
     const showDeleteDialog = () => {
-        // ... (código existente sem alteração) ...
         if (!currentPassword) {
             notify('Digite sua senha atual para excluir a conta.');
             return;
@@ -98,7 +207,6 @@ export default function ProfileScreen({ setUser }) { //
     const hideDeleteDialog = () => setDialogVisible(false);
 
     const confirmDeleteProfile = async () => {
-        // ... (código existente sem alteração) ...
         hideDeleteDialog();
         setLoading(true);
         try {
@@ -107,25 +215,75 @@ export default function ProfileScreen({ setUser }) { //
             notify('Conta excluída.', 'success');
             if (setUser) setUser(null); 
         } catch (error) {
-            if (error.code === 'auth/wrong-password') notify('Não foi possível excluir: Senha incorreta.');
-            else notify('Erro ao excluir conta.');
+            if (error.code === 'auth/wrong-password') {
+                notify('Não foi possível excluir: Senha incorreta.');
+            } else {
+                notify('Erro ao excluir conta.');
+            }
         } finally {
             setLoading(false);
         }
     };
-    // --- FIM DA LÓGICA ---
 
     if (!user) {
-         return null; // Retorna nulo se o usuário deslogar
+        return null; 
     }
+
+    const anyLoading = loading || loadingLogout || loadingProfile;
 
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <Title style={[styles.title, { color: colors.onBackground }]}>Meu Perfil</Title>
+            <Title style={styles.title}>Meu Perfil</Title>
             
-            {/* Removi o e-mail para um visual mais limpo, mas você pode descomentar se quiser */}
+            <TextInput
+                label="E-mail (não editável)"
+                value={user.email}
+                style={styles.input} 
+                mode="outlined"
+                disabled={true}
+                left={<TextInput.Icon icon="email" />}
+            />
             
-            <Text style={[styles.sectionTitle, { color: colors.onBackground }]}>Alterar Senha</Text>
+            <Text style={styles.sectionTitle}>Dados Pessoais</Text>
+            
+            {/* 7. O TextInput agora usa os estados e handlers corretos */}
+            <TextInput
+                label="Telefone"
+                mode="outlined"
+                keyboardType="phone-pad"
+                activeOutlineColor={colors.primary}
+                style={styles.input}
+                left={<TextInput.Icon icon="phone" />}
+                disabled={anyLoading}
+                value={telefoneDisplay} // Mostra o valor mascarado
+                onChangeText={handleTelefoneChange} // Usa o handler customizado
+                maxLength={15} // (00) 00000-0000 (limite do texto com máscara)
+            />
+
+            <TextInput
+                label="Endereço"
+                value={endereco}
+                onChangeText={setEndereco}
+                style={styles.input} 
+                mode="outlined"
+                activeOutlineColor={colors.primary}
+                left={<TextInput.Icon icon="map-marker" />}
+                disabled={anyLoading}
+            />
+            <Button
+                mode="contained"
+                onPress={handleSaveProfile}
+                loading={loadingProfile}
+                disabled={anyLoading} 
+                style={[styles.saveButton, { backgroundColor: colors.primary }]}
+                icon="content-save"
+            >
+                Salvar Dados Pessoais
+            </Button>
+
+            <View style={styles.divider} /> 
+
+            <Text style={styles.sectionTitle}>Alterar Senha</Text>
             
             <TextInput
                 label="Nova Senha"
@@ -135,11 +293,11 @@ export default function ProfileScreen({ setUser }) { //
                 mode="outlined"
                 secureTextEntry
                 activeOutlineColor={colors.primary}
-                outlineColor={colors.outline}
                 left={<TextInput.Icon icon="lock-reset" />}
+                disabled={anyLoading}
             />
 
-            <Text style={[styles.warning, { color: colors.onSurfaceVariant }]}>
+            <Text style={styles.warning}>
                 * Para salvar ou excluir, confirme sua senha atual abaixo.
             </Text>
 
@@ -151,60 +309,68 @@ export default function ProfileScreen({ setUser }) { //
                 mode="outlined"
                 secureTextEntry
                 activeOutlineColor={colors.primary}
-                outlineColor={colors.outline}
                 left={<TextInput.Icon icon="lock" />}
+                disabled={anyLoading}
             />
 
             <Button
                 mode="contained"
                 onPress={handleUpdatePassword}
                 loading={loading}
-                disabled={loading || loadingLogout} // 4. Atualizar disabled
+                disabled={anyLoading}
                 style={[styles.saveButton, { backgroundColor: colors.primary }]}
-                textColor={colors.onPrimary}
                 icon="content-save"
             >
                 Atualizar Senha
             </Button>
             
-            {/* 5. BOTÃO DE LOGOUT ADICIONADO AQUI */}
             <Button
                 mode="contained"
                 onPress={handleLogout}
                 loading={loadingLogout}
-                disabled={loading || loadingLogout}
-                style={[styles.logoutButton, { backgroundColor: colors.accent }]} // Cor de destaque
-                textColor={colors.onPrimary} 
+                disabled={anyLoading}
+                style={[styles.logoutButton, { backgroundColor: colors.accent }]} 
+                textColor={colors.background}
                 icon="logout"
             >
                 Sair (Logout)
             </Button>
-
-            <View style={[styles.divider, { backgroundColor: colors.outline }]} />
-
+            
             <Button
                 mode="outlined"
                 onPress={showDeleteDialog}
                 loading={loading}
-                disabled={loading || loadingLogout} // 4. Atualizar disabled
-                textColor={colors.error}
-                style={[styles.deleteButton, { borderColor: colors.error }]}
+                disabled={anyLoading}
+                textColor="red" 
+                style={styles.deleteButton}
                 icon="delete-forever"
             >
                 Excluir Minha Conta
             </Button>
 
             <Portal>
-                <Dialog visible={dialogVisible} onDismiss={hideDeleteDialog} style={{backgroundColor: colors.surface}}>
+                <Dialog visible={dialogVisible} onDismiss={hideDeleteDialog}>
                     <Dialog.Title>Confirmar Exclusão</Dialog.Title>
                     <Dialog.Content>
                         <Text variant="bodyMedium">
-                            Esta ação é irreversível. Você tem certeza que deseja excluir permanentemente sua conta?
+                            Tem certeza que deseja excluir sua conta?
+                        </Text>
+                        <Text variant="bodySmall" style={{ marginTop: 10 }}>
+                            Esta ação não pode ser desfeita.
                         </Text>
                     </Dialog.Content>
                     <Dialog.Actions>
-                        <Button onPress={hideDeleteDialog} textColor={colors.onSurfaceVariant}>Cancelar</Button>
-                        <Button onPress={confirmDeleteProfile} textColor={colors.error}>Excluir</Button>
+                        <Button onPress={hideDeleteDialog} disabled={loading}>
+                            Cancelar
+                        </Button>
+                        <Button
+                            onPress={confirmDeleteProfile}
+                            textColor={colors.error}
+                            loading={loading}
+                            disabled={loading}
+                        >
+                            Excluir
+                        </Button>
                     </Dialog.Actions>
                 </Dialog>
             </Portal>
@@ -213,54 +379,48 @@ export default function ProfileScreen({ setUser }) { //
     );
 }
 
+// Estilos permanecem os mesmos
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 24,
+        padding: 20,
         justifyContent: 'center',
     },
     title: {
         textAlign: 'center',
-        marginBottom: 30,
-        fontSize: 28,
+        marginBottom: 20,
         fontWeight: 'bold',
     },
     sectionTitle: {
-        marginTop: 20,
-        marginBottom: 10,
-        fontSize: 18,
+        marginTop: 15,
+        marginBottom: 5,
         fontWeight: 'bold',
+        fontSize: 16,
     },
     input: {
-        marginBottom: 15,
+        marginBottom: 12,
     },
     warning: {
-        fontSize: 13,
-        marginBottom: 10,
+        fontSize: 12,
+        marginBottom: 5,
         fontStyle: 'italic',
-        textAlign: 'center',
     },
     saveButton: {
-        marginTop: 20,
-        borderRadius: 10,
-        height: 55,
-        justifyContent: 'center',
+        marginTop: 10,
+        borderRadius: 8,
     },
-    // 6. ESTILO PARA O BOTÃO DE LOGOUT
-    logoutButton: {
+    logoutButton: { 
         marginTop: 15,
-        borderRadius: 10,
-        height: 55,
-        justifyContent: 'center',
+        borderRadius: 8,
     },
     deleteButton: {
+        borderColor: 'red',
+        borderRadius: 8,
         marginTop: 15,
-        borderRadius: 10,
-        height: 55,
-        justifyContent: 'center',
     },
     divider: {
         height: 1,
-        marginVertical: 35,
+        backgroundColor: '#444', 
+        marginVertical: 30,
     }
 });
