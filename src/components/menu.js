@@ -1,23 +1,25 @@
 import * as React from 'react';
-import { NavigationContainer, DarkTheme } from '@react-navigation/native'; 
+import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import HomeScreen from './screen/HomeScreen.js';
 import ProfileScreen from './screen/ProfileScreen.js';
 import CadastroScreen from './screen/CadastroScreen.js';
+import ShopScreen from './screen/ShopScreen.js';
+import CartScreen from './screen/CartScreen.js';
 
 const Tab = createBottomTabNavigator();
 
-export default function Menu({ setUser, theme }) { // <-- 1. 'setUser' deve estar sendo recebido aqui
+export default function Menu({ setUser, theme }) {
 
     const navigationTheme = {
-        ...DarkTheme, 
+        ...DarkTheme,
         colors: {
             ...DarkTheme.colors,
-            primary: theme.colors.primary, 
-            background: theme.colors.background, 
-            card: theme.colors.surface, 
+            primary: theme.colors.primary,
+            background: theme.colors.background,
+            card: theme.colors.surface,
             text: theme.colors.text,
             notification: theme.colors.primary,
         },
@@ -36,8 +38,14 @@ export default function Menu({ setUser, theme }) { // <-- 1. 'setUser' deve esta
                             case 'Perfil':
                                 iconName = 'user';
                                 break;
-                            case 'Cadastro': 
+                            case 'Cadastro':
                                 iconName = 'plus-square';
+                                break;
+                            case 'Loja':
+                                iconName = 'shopping-bag';
+                                break;
+                            case 'Carrinho':
+                                iconName = 'shopping-cart';
                                 break;
                             default:
                                 iconName = 'bomb';
@@ -45,27 +53,26 @@ export default function Menu({ setUser, theme }) { // <-- 1. 'setUser' deve esta
                         }
                         return <Icon name={iconName} size={size} color={color} />;
                     },
-                    tabBarActiveTintColor: theme.colors.accent, 
+                    tabBarActiveTintColor: theme.colors.accent,
                     tabBarInactiveTintColor: '#777',
                     headerShown: false,
-                    tabBarStyle: { 
-                        backgroundColor: theme.colors.surface, 
-                        borderTopColor: theme.colors.surface, 
+                    tabBarStyle: {
+                        backgroundColor: theme.colors.surface,
+                        borderTopColor: theme.colors.surface,
                     }
                 })}
             >
-                
-                {/* Home agora usa 'component' para receber 'navigation' */}
+
                 <Tab.Screen name="Home" component={HomeScreen} />
-                
-                <Tab.Screen 
-                    name="Cadastro" 
-                    component={CadastroScreen} 
+                <Tab.Screen name="Loja" component={ShopScreen} />
+                <Tab.Screen name="Carrinho" component={CartScreen} />
+                <Tab.Screen
+                    name="Cadastro"
+                    component={CadastroScreen}
                 />
-                
-                {/* 2. 'Perfil' DEVE usar esta sintaxe para passar o 'setUser' */}
+
                 <Tab.Screen name="Perfil">
-                  {(props) => <ProfileScreen {...props} setUser={setUser} />}
+                    {(props) => <ProfileScreen {...props} setUser={setUser} />}
                 </Tab.Screen>
 
             </Tab.Navigator>
