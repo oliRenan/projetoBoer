@@ -4,12 +4,14 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../../context/CartContext';
+import { useTheme } from 'react-native-paper';
 
 export default function ShopScreen() {
     const [produtos, setProdutos] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigation = useNavigation();
     const { adicionarAoCarrinho, carrinho } = useCart();
+    const { colors } = useTheme();
 
     // COLOQUE AQUI A URL DO SEU BIN PÚBLICO
     const API_URL = 'https://api.jsonbin.io/v3/b/6921fdf143b1c97be9be5a76';
@@ -25,42 +27,40 @@ export default function ShopScreen() {
             setProdutos(response.data.record ? response.data.record.produtos : response.data.produtos);
         } catch (error) {
             console.error("Erro ao buscar produtos:", error);
-            // alert("Erro ao carregar produtos. Verifique a URL.");
         } finally {
             setLoading(false);
         }
     };
 
     const renderItem = ({ item }) => (
-        <View style={styles.productCard}>
+        <View style={[styles.productCard, { backgroundColor: colors.surface }]}>
             <Image
                 source={{ uri: item.imagem || 'https://via.placeholder.com/150' }}
                 style={styles.productImage}
                 resizeMode="cover"
             />
             <View style={styles.productInfo}>
-                <Text style={styles.productName}>{item.nome}</Text>
-                <Text style={styles.productPrice}>R$ {item.preco.toFixed(2)}</Text>
+                <Text style={[styles.productName, { color: colors.onSurface }]}>{item.nome}</Text>
+                <Text style={[styles.productPrice, { color: colors.primary }]}>R$ {item.preco.toFixed(2)}</Text>
 
                 <TouchableOpacity
-                    style={styles.addToCartButton}
+                    style={[styles.addToCartButton, { backgroundColor: colors.primary }]}
                     onPress={() => {
                         adicionarAoCarrinho(item);
-                        // Feedback visual rápido (opcional)
                     }}
                 >
-                    <Text style={styles.addToCartButtonText}>Adicionar ao Carrinho</Text>
+                    <Text style={[styles.addToCartButtonText, { color: colors.onPrimary }]}>Adicionar ao Carrinho</Text>
                 </TouchableOpacity>
             </View>
         </View>
     );
 
     if (loading) {
-        return <View style={styles.center}><ActivityIndicator size="large" color="#D00000" /></View>;
+        return <View style={[styles.center, { backgroundColor: colors.background }]}><ActivityIndicator size="large" color={colors.primary} /></View>;
     }
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <FlatList
                 data={produtos}
                 keyExtractor={(item) => String(item.id)}
@@ -69,13 +69,13 @@ export default function ShopScreen() {
             />
 
             <TouchableOpacity
-                style={styles.fab}
+                style={[styles.fab, { backgroundColor: colors.primary }]}
                 onPress={() => navigation.navigate('Carrinho')}
             >
-                <Ionicons name="cart" size={24} color="#fff" />
+                <Ionicons name="cart" size={24} color={colors.onPrimary} />
                 {carrinho.length > 0 && (
-                    <View style={styles.badge}>
-                        <Text style={styles.badgeText}>{carrinho.length}</Text>
+                    <View style={[styles.badge, { backgroundColor: colors.error }]}>
+                        <Text style={[styles.badgeText, { color: colors.onError }]}>{carrinho.length}</Text>
                     </View>
                 )}
             </TouchableOpacity>
@@ -84,10 +84,9 @@ export default function ShopScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8fafc' },
+    container: { flex: 1 },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     productCard: {
-        backgroundColor: '#fff',
         borderRadius: 12,
         marginBottom: 16,
         padding: 16,
@@ -107,21 +106,19 @@ const styles = StyleSheet.create({
         backgroundColor: '#eee',
     },
     productInfo: { flex: 1 },
-    productName: { fontSize: 16, fontWeight: 'bold', color: '#333' },
-    productPrice: { fontSize: 14, color: '#D00000', fontWeight: '600', marginVertical: 4 },
+    productName: { fontSize: 16, fontWeight: 'bold' },
+    productPrice: { fontSize: 14, fontWeight: '600', marginVertical: 4 },
     addToCartButton: {
-        backgroundColor: '#D00000',
         padding: 8,
         borderRadius: 6,
         alignItems: 'center',
         marginTop: 4
     },
-    addToCartButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
+    addToCartButtonText: { fontWeight: 'bold', fontSize: 12 },
     fab: {
         position: 'absolute',
         right: 20,
         bottom: 30,
-        backgroundColor: '#D00000',
         width: 56,
         height: 56,
         borderRadius: 28,
@@ -133,12 +130,11 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: -5,
         right: -5,
-        backgroundColor: '#333',
         borderRadius: 10,
         width: 20,
         height: 20,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    badgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' }
+    badgeText: { fontSize: 10, fontWeight: 'bold' }
 });

@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useCart } from '../../context/CartContext';
 import { Ionicons } from '@expo/vector-icons';
-import { Portal, Dialog, Paragraph, Button as PaperButton } from 'react-native-paper';
+import { Portal, Dialog, Paragraph, Button as PaperButton, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 
 export default function CartScreen() {
     const { carrinho, incrementarQtd, decrementarQtd, removerItem, totalGeral, limparCarrinho } = useCart();
     const navigation = useNavigation();
+    const { colors } = useTheme();
 
     const [visible, setVisible] = useState(false);
 
@@ -22,44 +23,44 @@ export default function CartScreen() {
     };
 
     const renderItem = ({ item }) => (
-        <View style={styles.cartItem}>
+        <View style={[styles.cartItem, { backgroundColor: colors.surface, borderColor: colors.outline }]}>
             <Image
                 source={{ uri: item.imagem || 'https://via.placeholder.com/150' }}
                 style={styles.itemImage}
             />
 
             <View style={styles.itemDetails}>
-                <Text style={styles.itemName}>{item.nome}</Text>
-                <Text style={styles.itemPriceUnit}>Unit: R$ {item.preco.toFixed(2)}</Text>
-                <Text style={styles.itemTotal}>Total: R$ {(item.preco * item.quantidade).toFixed(2)}</Text>
+                <Text style={[styles.itemName, { color: colors.onSurface }]}>{item.nome}</Text>
+                <Text style={[styles.itemPriceUnit, { color: colors.onSurfaceVariant }]}>Unit: R$ {item.preco.toFixed(2)}</Text>
+                <Text style={[styles.itemTotal, { color: colors.primary }]}>Total: R$ {(item.preco * item.quantidade).toFixed(2)}</Text>
             </View>
 
             <View style={styles.controls}>
                 <View style={styles.quantityControl}>
-                    <TouchableOpacity onPress={() => decrementarQtd(item.id)} style={styles.qtdBtn}>
-                        <Ionicons name="remove" size={16} color="white" />
+                    <TouchableOpacity onPress={() => decrementarQtd(item.id)} style={[styles.qtdBtn, { backgroundColor: colors.primary }]}>
+                        <Ionicons name="remove" size={16} color={colors.onPrimary} />
                     </TouchableOpacity>
 
-                    <Text style={styles.qtdText}>{item.quantidade}</Text>
+                    <Text style={[styles.qtdText, { color: colors.onSurface }]}>{item.quantidade}</Text>
 
-                    <TouchableOpacity onPress={() => incrementarQtd(item.id)} style={styles.qtdBtn}>
-                        <Ionicons name="add" size={16} color="white" />
+                    <TouchableOpacity onPress={() => incrementarQtd(item.id)} style={[styles.qtdBtn, { backgroundColor: colors.primary }]}>
+                        <Ionicons name="add" size={16} color={colors.onPrimary} />
                     </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity onPress={() => removerItem(item.id)} style={styles.removeBtn}>
-                    <Ionicons name="trash" size={20} color="#D00000" />
+                    <Ionicons name="trash" size={20} color={colors.error} />
                 </TouchableOpacity>
             </View>
         </View>
     );
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             {carrinho.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                    <Ionicons name="cart-outline" size={64} color="#ccc" />
-                    <Text style={styles.emptyText}>Carrinho Vazio</Text>
+                    <Ionicons name="cart-outline" size={64} color={colors.onSurfaceVariant} />
+                    <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>Carrinho Vazio</Text>
                 </View>
             ) : (
                 <FlatList
@@ -71,29 +72,29 @@ export default function CartScreen() {
             )}
 
             {carrinho.length > 0 && (
-                <View style={styles.footer}>
+                <View style={[styles.footer, { backgroundColor: colors.surface, borderColor: colors.outline }]}>
                     <View style={styles.totalRow}>
-                        <Text style={styles.totalLabel}>Total Geral:</Text>
-                        <Text style={styles.totalValue}>R$ {totalGeral.toFixed(2)}</Text>
+                        <Text style={[styles.totalLabel, { color: colors.onSurface }]}>Total Geral:</Text>
+                        <Text style={[styles.totalValue, { color: colors.primary }]}>R$ {totalGeral.toFixed(2)}</Text>
                     </View>
 
-                    <TouchableOpacity style={styles.checkoutButton} onPress={showDialog}>
-                        <Text style={styles.checkoutButtonText}>Finalizar Compra</Text>
+                    <TouchableOpacity style={[styles.checkoutButton, { backgroundColor: colors.primary }]} onPress={showDialog}>
+                        <Text style={[styles.checkoutButtonText, { color: colors.onPrimary }]}>Finalizar Compra</Text>
                     </TouchableOpacity>
                 </View>
             )}
 
             <Portal>
-                <Dialog visible={visible} onDismiss={hideDialog} style={{ backgroundColor: 'white' }}>
-                    <Dialog.Title style={{ color: '#333' }}>Confirmar Compra</Dialog.Title>
+                <Dialog visible={visible} onDismiss={hideDialog} style={{ backgroundColor: colors.surface }}>
+                    <Dialog.Title style={{ color: colors.onSurface }}>Confirmar Compra</Dialog.Title>
                     <Dialog.Content>
-                        <Paragraph style={{ color: '#666' }}>
+                        <Paragraph style={{ color: colors.onSurfaceVariant }}>
                             Deseja finalizar o pedido no valor de R$ {totalGeral.toFixed(2)}?
                         </Paragraph>
                     </Dialog.Content>
                     <Dialog.Actions>
-                        <PaperButton onPress={hideDialog} textColor="#666">Cancelar</PaperButton>
-                        <PaperButton onPress={handleFinalizarCompra} textColor="#D00000">Confirmar</PaperButton>
+                        <PaperButton onPress={hideDialog} textColor={colors.onSurfaceVariant}>Cancelar</PaperButton>
+                        <PaperButton onPress={handleFinalizarCompra} textColor={colors.primary}>Confirmar</PaperButton>
                     </Dialog.Actions>
                 </Dialog>
             </Portal>
@@ -103,28 +104,25 @@ export default function CartScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#fff' },
+    container: { flex: 1 },
     emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    emptyText: { fontSize: 18, color: '#999', marginTop: 10 },
+    emptyText: { fontSize: 18, marginTop: 10 },
     cartItem: {
         flexDirection: 'row',
-        backgroundColor: '#f9f9f9',
         borderRadius: 8,
         padding: 10,
         marginBottom: 10,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#eee'
     },
     itemImage: { width: 50, height: 50, borderRadius: 4, backgroundColor: '#eee' },
     itemDetails: { flex: 1, marginLeft: 10 },
-    itemName: { fontWeight: 'bold', fontSize: 14, color: '#333' },
-    itemPriceUnit: { fontSize: 12, color: '#666' },
-    itemTotal: { fontSize: 12, fontWeight: 'bold', color: '#D00000', marginTop: 2 },
+    itemName: { fontWeight: 'bold', fontSize: 14 },
+    itemPriceUnit: { fontSize: 12 },
+    itemTotal: { fontSize: 12, fontWeight: 'bold', marginTop: 2 },
     controls: { alignItems: 'flex-end' },
     quantityControl: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
     qtdBtn: {
-        backgroundColor: '#D00000',
         width: 24,
         height: 24,
         borderRadius: 12,
@@ -138,10 +136,8 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: '#fff',
         padding: 20,
         borderTopWidth: 1,
-        borderColor: '#eee',
         elevation: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -2 },
@@ -149,16 +145,14 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
     },
     totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-    totalLabel: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-    totalValue: { fontSize: 22, fontWeight: 'bold', color: '#D00000' },
+    totalLabel: { fontSize: 18, fontWeight: 'bold' },
+    totalValue: { fontSize: 22, fontWeight: 'bold' },
     checkoutButton: {
-        backgroundColor: '#D00000',
         paddingVertical: 12,
         borderRadius: 8,
         alignItems: 'center',
     },
     checkoutButtonText: {
-        color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
     }

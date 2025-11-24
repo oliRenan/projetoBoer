@@ -1,35 +1,24 @@
-# Walkthrough - Merge Features (Branch: outracoisa)
+# Walkthrough - Theme Update (Branch: outracoisa)
 
-I have re-applied the merge of "Shop" and "Cart" features into the `outracoisa` branch, ensuring compatibility with the existing Dark Theme.
+I have updated the "Shop" and "Cart" screens to use the application's theme colors instead of hardcoded red values.
 
 ## Changes Made
 
-### 1. Context
-- Created `src/context/CartContext.js` to manage the shopping cart state.
-
-### 2. Screens
-- Created `src/components/screen/ShopScreen.js`:
-    - Fetches products from the API.
-    - Lists products with images and prices.
-    - Allows adding items to the cart.
-- Created `src/components/screen/CartScreen.js`:
-    - Lists items in the cart.
-    - Allows adjusting quantities or removing items.
-    - Shows total price.
-
-### 3. Navigation & App Structure
-- **`App.js`**: Wrapped the application with `CartProvider`. **Preserved the existing Dark Theme configuration.**
-- **`src/components/menu.js`**:
-    - Imported `ShopScreen` and `CartScreen`.
-    - Added "Loja" and "Carrinho" tabs to the Bottom Tab Navigator.
-    - Added icons for the new tabs (`shopping-bag` and `shopping-cart`).
+### 1. Screens
+- **`src/components/screen/ShopScreen.js`**:
+    - Replaced `#D00000` with `colors.primary` (from `useTheme`).
+    - Replaced white backgrounds with `colors.background` and `colors.surface`.
+    - Updated text colors to `colors.onSurface` and `colors.onPrimary`.
+- **`src/components/screen/CartScreen.js`**:
+    - Replaced `#D00000` with `colors.primary` for buttons and totals.
+    - Replaced `#D00000` with `colors.error` for the delete icon.
+    - Updated backgrounds and text colors to match the theme.
 
 ## Verification
-- **Theme Consistency**: The new screens should inherit the dark theme styling where applicable, or at least not break the app's visual consistency.
-- **Functionality**: The cart logic is identical to the previous implementation.
+- **Visual Consistency**: The "Loja" and "Carrinho" screens should now match the Dark Theme (purple/teal) defined in `App.js`, rather than the original red theme from `novo_projetoBoer`.
+- **Functionality**: No logic changes were made, only styling updates.
 
 ## Next Steps for User
 1.  Run the app: `npx expo start`
-2.  Login to the app.
-3.  You should see new tabs "Loja" and "Carrinho".
-4.  Test adding items to the cart and finalizing a purchase.
+2.  Navigate to "Loja" and "Carrinho".
+3.  Verify that the colors match the rest of the app (e.g., purple buttons instead of red).
