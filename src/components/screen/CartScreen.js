@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useCart } from '../../context/CartContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +8,11 @@ import { useNavigation } from '@react-navigation/native';
 
 import { database } from '../../services/connectionFirebase';
 import { ref, push, set } from "firebase/database";
+
+// CONSTANTES DO JSONBIN
+const BIN_ID = '692b63c743b1c97be9cd511e';
+const API_KEY = '$2a$10$PnDIWDYWH2ZxH3Er9aEDg.O7WuAvLSo/P8vu5jzbkYUs7PV6N0Hc2';
+const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
 export default function CartScreen() {
     const { carrinho, incrementarQtd, decrementarQtd, removerItem, totalGeral, limparCarrinho } = useCart();
@@ -32,6 +38,43 @@ export default function CartScreen() {
             const dbRef = ref(database, 'pedidos');
             const novoPedidoRef = push(dbRef);
             await set(novoPedidoRef, pedido);
+
+            // --- 2. Salvar no Jsonbin.io (Novo) ---
+            try {
+                // a) Buscar dados atuais
+                const responseGet = await axios.get(API_URL, {
+                    headers: {
+                        'X-Master-Key': API_KEY
+                    }
+                });
+
+                let currentData = responseGet.data.record;
+                // Garante que existe o array de pedidos
+                let pedidosJson = currentData.pedidos || [];
+
+                // b) Adicionar novo pedido
+                const novoPedidoJson = {
+                    id: novoPedidoRef.key, // Usa o mesmo ID do Firebase se possível, ou gera um
+                    ...pedido
+                };
+                pedidosJson.push(novoPedidoJson);
+
+                // c) Atualizar o bin (mantendo os produtos e atualizando pedidos)
+                await axios.put(API_URL, {
+                    ...currentData, // Mantém produtos e outros dados
+                    pedidos: pedidosJson
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': API_KEY
+                    }
+                });
+                console.log("Pedido salvo no Jsonbin com sucesso!");
+
+            } catch (jsonError) {
+                console.error("Erro ao salvar pedido no Jsonbin:", jsonError);
+                // Não vamos alertar o usuário para não assustar, já que foi salvo no Firebase
+            }
 
             hideDialog();
             limparCarrinho(); // Zera o carrinho
