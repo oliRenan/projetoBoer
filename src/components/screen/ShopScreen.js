@@ -6,6 +6,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../../context/CartContext';
 import { useTheme } from 'react-native-paper';
 
+import { database } from '../../services/connectionFirebase';
+import { ref, onValue } from "firebase/database";
+
 export default function ShopScreen() {
     const [produtos, setProdutos] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -21,13 +24,43 @@ export default function ShopScreen() {
     }, []);
 
     const carregarProdutos = async () => {
+        setLoading(true);
         try {
-            const response = await axios.get(API_URL);
-            // Ajuste conforme a estrutura do seu JSON (se for v3, geralmente é data.record.produtos)
-            setProdutos(response.data.record ? response.data.record.produtos : response.data.produtos);
+            // 1. Buscar do JSONBin
+            const responseJson = await axios.get(API_URL);
+            const produtosJson = responseJson.data.record ? responseJson.data.record.produtos : responseJson.data.produtos;
+
+            // 2. Buscar do Firebase
+            const dbRef = ref(database, 'tenis');
+            onValue(dbRef, (snapshot) => {
+                const data = snapshot.val();
+                let produtosFirebase = [];
+                
+                if (data) {
+                    produtosFirebase = Object.keys(data).map(key => ({
+                        id: key,
+                        ...data[key],
+                        imagem: data[key].imageUrl || 'https://via.placeholder.com/150' // Mapear imageUrl para imagem
+                    }));
+                }
+
+                // 3. Mesclar as duas listas
+                // Dica: Se quiser que os do Firebase apareçam primeiro, coloque antes no array
+                const listaCompleta = [...produtosFirebase, ...produtosJson];
+                
+                setProdutos(listaCompleta);
+                setLoading(false);
+            }, (error) => {
+                console.error("Erro ao buscar do Firebase:", error);
+                // Mesmo com erro no Firebase, mostra o que veio do JSONBin
+                setProdutos(produtosJson);
+                setLoading(false);
+            });
+
         } catch (error) {
-            console.error("Erro ao buscar produtos:", error);
-        } finally {
+            console.error("Erro ao buscar produtos (JSONBin):", error);
+            // Se der erro no JSONBin, tenta mostrar só o Firebase (precisaria de lógica separada, 
+            // mas aqui vamos só parar o loading para não travar a tela)
             setLoading(false);
         }
     };
