@@ -5,21 +5,44 @@ import { Ionicons } from '@expo/vector-icons';
 import { Portal, Dialog, Paragraph, Button as PaperButton, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 
+import { database } from '../../services/connectionFirebase';
+import { ref, push, set } from "firebase/database";
+
 export default function CartScreen() {
     const { carrinho, incrementarQtd, decrementarQtd, removerItem, totalGeral, limparCarrinho } = useCart();
     const navigation = useNavigation();
     const { colors } = useTheme();
 
     const [visible, setVisible] = useState(false);
+    const [loading, setLoading] = useState(false); // Estado de loading para o botão
 
     const showDialog = () => setVisible(true);
     const hideDialog = () => setVisible(false);
 
-    const handleFinalizarCompra = () => {
-        hideDialog();
-        limparCarrinho(); // Zera o carrinho
-        alert('Compra finalizada com sucesso!');
-        navigation.navigate('Home');
+    const handleFinalizarCompra = async () => {
+        setLoading(true);
+        try {
+            const pedido = {
+                itens: carrinho,
+                total: totalGeral,
+                data: new Date().toISOString(),
+                status: 'pendente'
+            };
+
+            const dbRef = ref(database, 'pedidos');
+            const novoPedidoRef = push(dbRef);
+            await set(novoPedidoRef, pedido);
+
+            hideDialog();
+            limparCarrinho(); // Zera o carrinho
+            alert('Compra finalizada com sucesso! Pedido salvo.');
+            navigation.navigate('Home');
+        } catch (error) {
+            console.error("Erro ao finalizar compra:", error);
+            alert('Erro ao finalizar compra. Tente novamente.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const renderItem = ({ item }) => (
@@ -93,8 +116,8 @@ export default function CartScreen() {
                         </Paragraph>
                     </Dialog.Content>
                     <Dialog.Actions>
-                        <PaperButton onPress={hideDialog} textColor={colors.onSurfaceVariant}>Cancelar</PaperButton>
-                        <PaperButton onPress={handleFinalizarCompra} textColor={colors.primary}>Confirmar</PaperButton>
+                        <PaperButton onPress={hideDialog} textColor={colors.onSurfaceVariant} disabled={loading}>Cancelar</PaperButton>
+                        <PaperButton onPress={handleFinalizarCompra} textColor={colors.primary} loading={loading} disabled={loading}>Confirmar</PaperButton>
                     </Dialog.Actions>
                 </Dialog>
             </Portal>

@@ -17,7 +17,7 @@ export default function ShopScreen() {
     const { colors } = useTheme();
 
     // COLOQUE AQUI A URL DO SEU BIN PÚBLICO
-    const API_URL = 'https://api.jsonbin.io/v3/b/6921fdf143b1c97be9be5a76';
+    const API_URL = 'https://api.jsonbin.io/v3/b/692b63c743b1c97be9cd511e';
 
     useEffect(() => {
         carregarProdutos();
@@ -35,7 +35,7 @@ export default function ShopScreen() {
             onValue(dbRef, (snapshot) => {
                 const data = snapshot.val();
                 let produtosFirebase = [];
-                
+
                 if (data) {
                     produtosFirebase = Object.keys(data).map(key => ({
                         id: key,
@@ -47,7 +47,7 @@ export default function ShopScreen() {
                 // 3. Mesclar as duas listas
                 // Dica: Se quiser que os do Firebase apareçam primeiro, coloque antes no array
                 const listaCompleta = [...produtosFirebase, ...produtosJson];
-                
+
                 setProdutos(listaCompleta);
                 setLoading(false);
             }, (error) => {
