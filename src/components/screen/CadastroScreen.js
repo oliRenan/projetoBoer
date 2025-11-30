@@ -289,13 +289,17 @@ export default function CadastroScreen() {
 
         try {
             // --- 1. Salvar no Firebase (Mantido) ---
+            let firebaseId = null; // Variável para guardar o ID do Firebase
+
             if (itemEmEdicao) {
+                firebaseId = itemEmEdicao.id; // Se for edição, usa o ID existente
                 const itemRef = ref(database, 'tenis/' + itemEmEdicao.id);
                 await update(itemRef, dadosTenis);
                 Toast.show({ type: 'success', text1: "Sucesso", text2: "Tênis atualizado no Firebase!" });
             } else {
                 const dbRef = ref(database, 'tenis');
                 const novoItemRef = push(dbRef);
+                firebaseId = novoItemRef.key; // Captura o novo ID gerado pelo Firebase
                 await set(novoItemRef, {
                     ...dadosTenis,
                     criadoEm: new Date().toISOString()
@@ -315,26 +319,40 @@ export default function CadastroScreen() {
                 let currentData = responseGet.data.record;
                 let produtos = currentData.produtos || [];
 
-                // b) Adicionar novo produto (simulando ID pois Jsonbin não gera auto-id como firebase)
-                // Nota: Para edição perfeita no Jsonbin, precisaríamos de um ID consistente. 
-                // Aqui vamos apenas ADICIONAR para simplificar, conforme pedido "mesmo cadastro".
-                // Se for edição, idealmente deveríamos encontrar e atualizar.
+                // b) Adicionar novo produto ou atualizar
+                // Agora usamos o firebaseId para garantir consistência
 
                 if (itemEmEdicao) {
-                    // Lógica simples de atualização baseada em nome ou ID se existisse
-                    // Como o Jsonbin é um array simples neste caso, vamos apenas adicionar por enquanto
-                    // ou tentar atualizar se tivermos um ID compatível.
-                    // Vamos assumir append para novos e ignorar edição complexa no Jsonbin por hora para não quebrar tudo
-                    console.log("Edição no Jsonbin não implementada totalmente para evitar duplicatas complexas.");
+                    // Lógica de atualização
+                    const index = produtos.findIndex(p => p.id === firebaseId);
+
+                    if (index !== -1) {
+                        produtos[index] = {
+                            ...produtos[index],
+                            ...dadosTenis
+                        };
+
+                        // c) Atualizar o bin
+                        await axios.put(API_URL, { ...currentData, produtos: produtos }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Master-Key': API_KEY
+                            }
+                        });
+                        console.log("Produto atualizado no Jsonbin com sucesso!");
+                    } else {
+                        console.warn("Produto não encontrado no Jsonbin para atualização (ID não bate ou só existe no Firebase).");
+                    }
+
                 } else {
                     const novoProdutoJson = {
-                        id: Date.now().toString(), // ID temporário
+                        id: firebaseId, // USA O MESMO ID DO FIREBASE
                         ...dadosTenis
                     };
                     produtos.push(novoProdutoJson);
 
                     // c) Atualizar o bin
-                    await axios.put(API_URL, { produtos: produtos }, {
+                    await axios.put(API_URL, { ...currentData, produtos: produtos }, {
                         headers: {
                             'Content-Type': 'application/json',
                             'X-Master-Key': API_KEY

@@ -44,9 +44,13 @@ export default function ShopScreen() {
                     }));
                 }
 
-                // 3. Mesclar as duas listas
-                // Dica: Se quiser que os do Firebase apareçam primeiro, coloque antes no array
-                const listaCompleta = [...produtosFirebase, ...produtosJson];
+                // 3. Mesclar as duas listas e remover duplicatas pelo ID
+                const listaCombinada = [...produtosFirebase, ...produtosJson];
+                const listaCompleta = listaCombinada.filter((item, index, self) =>
+                    index === self.findIndex((t) => (
+                        t.id === item.id
+                    ))
+                );
 
                 setProdutos(listaCompleta);
                 setLoading(false);

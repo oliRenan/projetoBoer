@@ -88,6 +88,45 @@ export default function CartScreen() {
         }
     };
 
+    const handleSalvarCarrinho = async () => {
+        setLoading(true);
+        try {
+            // 1. Buscar dados atuais do Jsonbin
+            const responseGet = await axios.get(API_URL, {
+                headers: {
+                    'X-Master-Key': API_KEY
+                }
+            });
+
+            let currentData = responseGet.data.record;
+
+            // 2. Atualizar o campo 'carrinho' com o estado atual
+            // Nota: Isso sobrescreve o carrinho salvo anteriormente.
+            // Se quiser salvar histórico, teria que ser um array de carrinhos ou algo assim.
+            const newData = {
+                ...currentData,
+                carrinho: carrinho // Salva o array do carrinho atual
+            };
+
+            // 3. Enviar atualização para o Jsonbin
+            await axios.put(API_URL, newData, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': API_KEY
+                }
+            });
+
+            console.log("Carrinho salvo no Jsonbin com sucesso!");
+            alert('Carrinho salvo com sucesso!');
+
+        } catch (error) {
+            console.error("Erro ao salvar carrinho no Jsonbin:", error);
+            alert('Erro ao salvar o carrinho. Tente novamente.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const renderItem = ({ item }) => (
         <View style={[styles.cartItem, { backgroundColor: colors.surface, borderColor: colors.outline }]}>
             <Image
@@ -146,6 +185,16 @@ export default function CartScreen() {
 
                     <TouchableOpacity style={[styles.checkoutButton, { backgroundColor: colors.primary }]} onPress={showDialog}>
                         <Text style={[styles.checkoutButtonText, { color: colors.onPrimary }]}>Finalizar Compra</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.saveCartButton, { borderColor: colors.primary }]}
+                        onPress={handleSalvarCarrinho}
+                        disabled={loading}
+                    >
+                        <Text style={[styles.saveCartButtonText, { color: colors.primary }]}>
+                            {loading ? 'Salvando...' : 'Salvar Carrinho'}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             )}
@@ -220,6 +269,17 @@ const styles = StyleSheet.create({
     },
     checkoutButtonText: {
         fontSize: 16,
+        fontWeight: 'bold',
+    },
+    saveCartButton: {
+        marginTop: 10,
+        paddingVertical: 10,
+        borderRadius: 8,
+        alignItems: 'center',
+        borderWidth: 1,
+    },
+    saveCartButtonText: {
+        fontSize: 14,
         fontWeight: 'bold',
     }
 });
